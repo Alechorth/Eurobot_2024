@@ -1,0 +1,545 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Balise" Id="{3c312846-c268-4192-a08a-7a4f966c4d10}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Balise
+VAR_INPUT
+	bstartBalise 			:BOOL; //démarre la balise
+	bStopDetection 			:BOOL; //active ou désactive la logique de détection
+	uirayonCatadioptre 		:UINT; //rayon détectable du catadioptre [mm]
+	tTimeBeforeAbort   		:TIME; //si la balise détect qqch pendant un temps plus long que cette variable, le FB renvoie un 2e signal pour que le robot tente éventuellement un évitement
+	
+	uiDistanceArretRapide	:UINT; //distance de détection lorsque le robot se déplace à la vitesseRapide [mm]
+	uiDistanceArretLente 	:UINT; //distance de détection lorsque le robot se déplace à la vitesseLente [mm]
+	iVitesseRapide		 	:INT;  //[mm/s]
+	iVitesseLente			:INT;  //[mm/s]
+	bactivateVisu     		:BOOL; //active la visu
+END_VAR
+
+VAR_OUTPUT
+	bStop 					:BOOL; //la balise détect qqch
+	bAbort					:BOOL; //si la balise détecte qqch plus longtemps que tTimeBeforeAbort, met la variable à true pour que le robot tente un évitement par exemple
+END_VAR
+
+VAR
+	past_time 				:TIME; //tempo pour laisser 2s au moteur de la balise avant de commencer la détection
+	time_since_enemi_detect :TIME; //temps depuis le début de la détection d'un enemi
+	balise_active 			:BOOL; //la balise tourne depuis 2s
+
+	DebutDetection	AT%I*: ULINT;  //Temps depuis le début de la détection 	(Front montant laser)
+	FinDetection 	AT%I*: ULINT;  //Temps depuis la fin de la détection 	(Front descendant laser)
+	DebutTour 		AT%I*: ULINT;  //Temps depuis le début du tour du laser	(Front montant inductif)
+	
+	R_EdgeLaser		: R_Trig;	//Front montant du laser
+	F_EdgeLaser		: F_Trig;	//Front descendant du laser
+	F_EdgeInductif	: F_Trig;	//Front descendant de l'inductif, signifie la fin du tour de la balise
+	
+//-----------------
+
+	Temps_Tour			:	ULINT;	// Temps d'un tour de la balise
+	Temps_Tour_1		:	ULINT;	// Temps d'un tour de la balise
+	Temps_Tour_2		:	ULINT;	// Temps d'un tour de la balise
+	
+	TValeursBrutes		: 	ARRAY [0..2,0..1] OF LREAL;	// Tableau stockant les valeurs des ennemis pour traitement,	colonnes = ennemis
+														//																ligne 0 = écart entre référence et fin de détection
+                                                        // 																ligne 1 = temps détection
+//-----------------
+	icounter		: INT;			// valeur boucle for
+	PresenceEnnemi 	: ARRAY [0..2] OF BOOL;  
+END_VAR
+
+VAR //Pour visu
+	posiX1 : LREAL;
+	posiY1 : LREAL;
+	posiX2 : LREAL;
+	posiY2 : LREAL;
+	posiX3 : LREAL;
+	posiY3 : LREAL;
+	
+	CoordX1 : LREAL;
+	CoordY1 : LREAL;
+	CoordX2 : LREAL;
+	CoordY2 : LREAL;
+	CoordX3 : LREAL;
+	CoordY3 : LREAL;
+	
+	AngleRAD : LREAL;
+	AngleRAD2 : LREAL;
+	AngleRAD3 : LREAL;
+	
+	Nothing1 : BOOL ;
+	Nothing2 : BOOL ;
+	Nothing3 : BOOL ;
+	
+	Angle0deg : BOOL;
+	Angle90deg: BOOL;
+	Angle180deg: BOOL;
+	Angle270deg: BOOL;
+	
+	D1_40cm : BOOL;
+	D2_40cm : BOOL;
+	D3_40cm : BOOL ;
+END_VAR;
+
+VAR CONSTANT
+	uiDistanceDetectionMax_mm : UINT := 975;
+	uiMarge					  : UINT := 20;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//_____________________________________________________________________________________________________________________________________________
+//
+// Activation de la balise
+//______________________________________________________________________________________________________________________________________________
+
+IF bstartBalise THEN 
+	G_IO.bMoteurBalise	:= TRUE;
+	IF NOT balise_active THEN 
+		balise_active := TRUE;
+		past_time := TIME();
+	END_IF;
+ELSE
+	balise_active := FALSE;
+	G_IO.bMoteurBalise	:= FALSE;
+END_IF
+
+//______________________________________________________________________________________________________________________________________________
+//
+// Gestion et calculs des données de la balise
+//______________________________________________________________________________________________________________________________________________
+
+// Si la balise est active depuis 2s
+IF balise_active AND delay(past_time, T#2S) THEN 
+	//----------------------------------------------------------------------------------------------- DEFINITION DES FRONTS DE LA BALISE ET DE L'INDUCTIF
+	F_EdgeLaser	 	(CLK := G_Balise.Laser);		// Début de captation d'un ennemi
+	R_EdgeLaser		(CLK := G_Balise.Laser);		// Fin de captation d'un ennemi
+	F_EdgeInductif 	(CLK := G_Balise.Inductif);		// Fin d'un tour de la balise
+	
+	//---------------------------------------------------------------------------------------------------------------- DEFINITION DU NOMBRE DE DETECTIONS
+	IF F_EdgeLaser.Q AND (G_Balise.iNombreEnnemi <= 3) THEN	// limitation à max 3 détections
+		G_Balise.iNombreEnnemi := G_Balise.iNombreEnnemi + 1;
+	END_IF
+	
+	//--------------------------------------------------------------------------------- DEFINITION DES TEMPS DE DETECTION ET DES ECARTS AVEC LA REFERENCE
+	// Quand un ennemi est détecté, les valeurs de temps de détection et de tour sont mise en mémoire, le > 1000000000000 sert à empècher les valeurs trop élevées d'être envoyées dans le programme et à bloquer la valeur précédente
+	IF R_EdgeLaser.Q AND (G_Balise.iNombreEnnemi > 0 AND G_Balise.iNombreEnnemi <=3) AND NOT ((FinDetection - DebutTour)> 1000000000000) THEN	
+		TValeursBrutes [(G_Balise.iNombreEnnemi - 1),E_Balise.angle] := ULINT_TO_LREAL (FinDetection - DebutTour);		// Inscription durée entre le 0° et la fin de détection de l'ennemi
+		TValeursBrutes [(G_Balise.iNombreEnnemi - 1),E_Balise.distance] := ULINT_TO_LREAL (FinDetection - DebutDetection);// Inscription durée détection de l'ennemi
+	END_IF
+	
+	//------------------------------------------------------------------------------------------------------------------------ CALCUL DES VALEURS FINALES
+	// durée d'un tour du laser,les 3 valeurs de tours sont chacune décalées d'un cycle automate, pour ne jamais perdre de cycle
+	IF NOT (Temps_Tour_2 = DebutTour) THEN;
+		Temps_Tour_2 := DebutTour;
+	END_IF
+	IF NOT (Temps_Tour_1 = Temps_Tour_2) THEN;
+		Temps_Tour := Temps_Tour_2 - Temps_Tour_1;
+	END_IF
+	Temps_Tour_1 := Temps_Tour_2;
+	
+	//----------------------------------------------------------------
+	// A la fin d'un tour, si on détecte au moins un ennemi 
+	IF F_EdgeInductif.Q THEN
+		// Calcul des angles et distances des ennemis
+		IF G_Balise.iNombreEnnemi <> 0 AND G_Balise.iNombreEnnemi <= 3 THEN 
+			FOR icounter := 0 TO (G_Balise.iNombreEnnemi - 1) DO
+				
+				G_Balise.ArrayEnnemi [icounter,E_Balise.angle] := _M_Angle_enemi(//calcule de l'angle de l'enemi
+								Time_Tour			:= ULINT_TO_LREAL (Temps_Tour),
+							  	Time_FinDetection	:= TValeursBrutes [icounter,E_Balise.Angle],
+							  	Time_DetecEnnemi	:= TValeursBrutes [icounter,E_Balise.Distance]);
+				
+				G_Balise.ArrayEnnemi [icounter,E_Balise.distance] := _M_Distance_enemi(//calcul de la distance de l'enemi
+								Time_Tour			:= ULINT_TO_LREAL (Temps_Tour),
+							  	Time_FinDetection	:= TValeursBrutes [icounter,E_Balise.Angle],
+							  	Time_DetecEnnemi	:= TValeursBrutes [icounter,E_Balise.Distance]);			  
+			END_FOR
+		END_IF
+		
+		// Remplissage du reste du tableau si pas 3 détections
+		IF  G_Balise.iNombreEnnemi <= 2 AND G_Balise.iNombreEnnemi > 0 THEN
+			FOR icounter := 2 TO G_Balise.iNombreEnnemi BY (-1) DO	// écriture de la valeur d'erreur dans le tableau de données brutes
+				G_Balise.ArrayEnnemi [icounter, E_Balise.angle] := 9000;
+				G_Balise.ArrayEnnemi [icounter, E_Balise.distance] := 9000;
+			END_FOR
+		ELSIF G_Balise.iNombreEnnemi = 0 THEN
+			FOR icounter := 2 TO 0 BY (-1) DO	// écriture de la valeur d'erreur dans le tableau de données brutes
+				G_Balise.ArrayEnnemi [icounter, E_Balise.Angle] := 9000;
+				G_Balise.ArrayEnnemi [icounter, E_Balise.Distance] := 9000;
+			END_FOR
+		END_IF
+		
+		// reset des compteurs et tableaux (sauf données finales) si tour de balise terminé (front descendant inductif)
+		G_Balise.iNombreEnnemi := 0;
+	END_IF
+END_IF
+
+
+//______________________________________________________________________________________________________________________________________________
+//
+// Analyse de la position et action sur le system 
+//______________________________________________________________________________________________________________________________________________
+
+IF NOT bStopDetection THEN 
+	//Détection de présence d'obstacles -----------------------------------------------------------------------------------------------------------------
+	
+	//Détecteur de présence obstacle dans la portée de détection réglée
+	FOR icounter := 0 TO 2 DO
+		IF	(G_Balise.ArrayEnnemi[icounter,E_Balise.Distance] < uiDistanceDetectionMax_mm AND G_Balise.ArrayEnnemi[icounter,E_Balise.Distance] <> 0) AND
+			(G_Balise.ArrayEnnemi[icounter,E_Balise.Angle] > 0	AND G_Balise.ArrayEnnemi[icounter,E_Balise.Angle] < 360) THEN
+			PresenceEnnemi [icounter] := TRUE;
+		ELSE
+			PresenceEnnemi [icounter] := FALSE;
+		END_IF
+	END_FOR
+	
+	//Position des robots adverses (point de vue du robot)------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	//obstacle face avant (entre 90 et 0°)
+	
+	IF		(PresenceEnnemi [0] AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle]	<= 90+uiMarge AND G_Balise.ArrayEnnemi [0,E_Balise.Angle]	>= 0-uiMarge))
+		OR	(PresenceEnnemi [1] AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle]	<= 90+uiMarge AND G_Balise.ArrayEnnemi [1,E_Balise.Angle]	>= 0-uiMarge))
+		OR	(PresenceEnnemi [2] AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle]	<= 90+uiMarge AND G_Balise.ArrayEnnemi [2,E_Balise.Angle]	>= 0-uiMarge))	THEN;
+		
+			G_Balise.bFront := TRUE; //-----------Obstacle confirmé derrière
+	ELSE 
+			G_Balise.bFront := FALSE;
+	END_IF
+	
+	//obstacle face arrière (entre 270 et 180°)
+	IF		(PresenceEnnemi [0] AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle]	<= 270+uiMarge AND G_Balise.ArrayEnnemi [0,E_Balise.Angle]	>= 180-uiMarge)) 
+		OR	(PresenceEnnemi [1] AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle]	<= 270+uiMarge AND G_Balise.ArrayEnnemi [1,E_Balise.Angle]	>= 180-uiMarge)) 
+		OR	(PresenceEnnemi [2] AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle]	<= 270+uiMarge AND G_Balise.ArrayEnnemi [2,E_Balise.Angle]	>= 180-uiMarge))	THEN;
+		
+			G_Balise.bBack := TRUE; //-----------Obstacle confirmé devant
+	ELSE 
+			G_Balise.bBack := FALSE;
+	END_IF
+	
+	//obstacle coté droit (entre 270 et 360°)
+	IF		(PresenceEnnemi [0] AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle]	< 360+uiMarge AND G_Balise.ArrayEnnemi [0,E_Balise.Angle]	> 270-uiMarge))
+		OR	(PresenceEnnemi [1] AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle]	< 360+uiMarge AND G_Balise.ArrayEnnemi [1,E_Balise.Angle]	> 270-uiMarge))
+		OR	(PresenceEnnemi [2] AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle]	< 360+uiMarge AND G_Balise.ArrayEnnemi [2,E_Balise.Angle]	> 270-uiMarge))		THEN;
+		
+			G_Balise.bRight := TRUE;	//------------ Obstacle confirmé à droite
+	ELSE
+			G_Balise.bRight := FALSE;
+	END_IF
+	
+	//obstacle coté gauche (entre 180 et 90°)
+	IF		(PresenceEnnemi [0] AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle]	< 180+uiMarge AND G_Balise.ArrayEnnemi [0,E_Balise.Angle]	> 90-uiMarge))
+		OR	(PresenceEnnemi [1] AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle]	< 180+uiMarge AND G_Balise.ArrayEnnemi [1,E_Balise.Angle]	> 90-uiMarge))
+		OR	(PresenceEnnemi [2] AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle]	< 180+uiMarge AND G_Balise.ArrayEnnemi [2,E_Balise.Angle]	> 90-uiMarge))		THEN;
+		
+			G_Balise.bLeft := TRUE;	//------------ Obstacle confirmé à gauche
+	ELSE
+			G_Balise.bLeft := FALSE;
+	END_IF
+	
+	//obstacle très près (distance min. sans gêner notre robot, prendre en compte goblets et distance d'arrêt + pinces)
+	IF  	(PresenceEnnemi [0] AND G_Balise.ArrayEnnemi[0,E_Balise.Distance]	<= uiDistanceArretLente)
+		OR	(PresenceEnnemi [1] AND G_Balise.ArrayEnnemi[1,E_Balise.Distance]	<= uiDistanceArretLente)
+		OR	(PresenceEnnemi [2] AND G_Balise.ArrayEnnemi[2,E_Balise.Distance]	<= uiDistanceArretLente) THEN
+	
+			G_Balise.bClose := TRUE;//-------- Obstacle trop proche
+	ELSE
+			G_Balise.bClose := FALSE ;
+	END_IF
+	
+	// Obstacle a une distance proche, le robot s'arrête si il va trop vite
+	IF  	(PresenceEnnemi [0] AND G_Balise.ArrayEnnemi[0,E_Balise.Distance]	<= uiDistanceArretRapide)
+		OR	(PresenceEnnemi [1] AND G_Balise.ArrayEnnemi[1,E_Balise.Distance]	<= uiDistanceArretRapide)
+		OR	(PresenceEnnemi [2] AND G_Balise.ArrayEnnemi[2,E_Balise.Distance]	<= uiDistanceArretRapide) THEN
+		
+			G_Balise.bProche := TRUE;//------- Obstacle proche
+	ELSE
+			G_Balise.bProche := FALSE;
+	END_IF
+	
+	//Logique d'arrêt------------------------------------------------------------------------------------------------------------------------------------
+	IF	(G_Moteurs.mcRelativeD.Distance > 0 AND G_Moteurs.mcRelativeG.Distance > 0 AND	G_Balise.bFront	AND (G_Moteurs.AxEncodeurD.NcToPlc.ActVelo > iVitesseRapide)) OR	// Si le robot avance vite mais qu'il y a un ennemi devant
+		(G_Moteurs.mcRelativeD.Distance < 0 AND G_Moteurs.mcRelativeG.Distance < 0 AND	G_Balise.bBack	AND (G_Moteurs.AxEncodeurD.NcToPlc.ActVelo < -iVitesseRapide)) OR	// Si le robot recule vite mais qu'il y a un ennemi derrière
+		
+		(G_Moteurs.mcRelativeD.Distance > 0 AND G_Moteurs.mcRelativeG.Distance > 0 AND	G_Balise.bFront	AND G_Balise.bProche AND (G_Moteurs.AxEncodeurD.NcToPlc.ActVelo > iVitesseLente)) OR	// Si le robot avance mais qu'il y a un ennemi devant
+		(G_Moteurs.mcRelativeD.Distance < 0 AND G_Moteurs.mcRelativeG.Distance < 0 AND	G_Balise.bBack	AND G_Balise.bProche AND (G_Moteurs.AxEncodeurD.NcToPlc.ActVelo < -iVitesseLente)) OR	// Si le robot recule mais qu'il y a un ennemi derrière
+		
+		(G_Moteurs.mcRelativeD.Distance > 0 AND G_Moteurs.mcRelativeG.Distance > 0 AND	G_Balise.bFront	AND	G_Balise.bClose) OR	// Si le robot avance lentement ou veut avancer mais qu'il y a un ennemi devant
+		(G_Moteurs.mcRelativeD.Distance < 0 AND G_Moteurs.mcRelativeG.Distance < 0 AND	G_Balise.bBack 	AND	G_Balise.bClose) OR	// Si le robot recule lentement ou veut reculer mais qu'il y a un ennemi derrière
+		
+		(G_Balise.bClose) 	THEN	//Si un ennemi nous empêche de tourner
+		
+		//compte le temps depuis le moment de détection d'un adversaire
+		IF NOT bStop THEN 
+			time_since_enemi_detect := TIME();
+		END_IF
+		bStop := TRUE;	// Interruption parcours
+	ELSE	
+		bStop := FALSE;	// reprise parcours
+	END_IF
+	
+	//change de tâche si il est bloqué depuis trop longtemps
+	IF delay(time_since_enemi_detect,tTimeBeforeAbort) AND bstop THEN 
+		bAbort := TRUE;
+	ELSE
+		bAbort := FALSE;
+	END_IF
+END_IF;
+
+//______________________________________________________________________________________________________________________________________________
+//
+// Gestion de la visu 
+//______________________________________________________________________________________________________________________________________________
+M_visu();]]></ST>
+    </Implementation>
+    <Method Name="_M_Angle_enemi" Id="{94ce284a-e56a-4be4-ad05-60eb7ade1381}">
+      <Declaration><![CDATA[METHOD PUBLIC _M_Angle_enemi : LREAL
+VAR_INPUT
+	Time_Tour			: LREAL;	// temps du tour
+	Time_DetecEnnemi	: LREAL;	//temps de détection d'un ennemi
+	Time_FinDetection	: LREAL;	//Temps entre la référence et la fin de la détection d'un ennemi
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Si la balise tourne, l'angle de détection est calculé
+IF (Time_Tour > 0) THEN																				//														  Temps:	|	Time_Tour	|	Time_FinDetection - Demi angle
+	_M_Angle_enemi := ((360*Time_FinDetection/Time_Tour) - (360*Time_DetecEnnemi)/(Time_Tour*2));	// calcul angle position recepteur avec règle de trois = --------------------------------------------------------------
+																									//														  Angle:	|	360° (2*PI)	|		Angle (ce qu'on cherche)
+	IF (_M_Angle_enemi < 0) THEN
+		_M_Angle_enemi	:= _M_Angle_enemi + 360;// Si le calcul donne une valeur négative, elle est remise en positive
+	END_IF																						
+END_IF																						]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_M_Distance_enemi" Id="{7517e8df-525f-4e6b-9357-692f82df3594}">
+      <Declaration><![CDATA[METHOD PUBLIC _M_Distance_enemi : LREAL
+VAR_INPUT
+	Time_Tour			: LREAL;	// temps du tour
+	Time_DetecEnnemi	: LREAL;	//temps de détection d'un ennemi
+	Time_FinDetection	: LREAL;	//Temps entre la référence et la fin de la détection d'un ennemi
+END_VAR
+VAR_INST
+	Angle_Detection	:	LREAL;		// angle de détection ("largeur" de l'ennemi), toujours en [ns]
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Si la balise tourne, l'angle de détection est calculé
+IF (Time_Tour > 0) THEN											//															Temps:	|	Time_Tour	|	Time_DetecEnnemi
+	Angle_Detection := (2*PI* Time_DetecEnnemi)/(Time_Tour); 	// calcul angle complet de détection avec règle de trois = ------------------------------------------------
+																//															Angle:	|	360° (2PI)	|	Angle_Detection
+										
+	IF Angle_Detection/2 <> 0 THEN														//											  	 rayon du catadioptre
+        _M_Distance_enemi := ABS (uirayonCatadioptre/ TAN(Angle_Detection /2));			//	calcul distance avec trigo :  Distance = -------------------------------
+	END_IF																				//											TAN[demi angle détection balise]
+END_IF;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="M_visu" Id="{86feb1f6-879a-40c6-b174-d84a425b8bc6}">
+      <Declaration><![CDATA[METHOD PUBLIC M_visu 
+VAR_INST
+	AngleRelativeRAD1 : LREAL;
+	AngleRelativeRAD2 : LREAL;
+	AngleRelativeRAD3 : LREAL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF balise_active AND delay(past_time, T#2S) AND bactivateVisu THEN 
+
+	//adapation des valeurs du 1er récepteur pour les afficher sur la visu
+	IF (G_Balise.ArrayEnnemi [0,E_Balise.Angle] < 9000) AND (G_Balise.ArrayEnnemi [0,E_Balise.Distance] < 9000)  THEN;	
+		Nothing1 := 0;
+		AngleRAD := ((G_Balise.ArrayEnnemi [0,0])*2*PI)/360;
+		posiX1 := (SIN (AngleRAD)*(G_Balise.ArrayEnnemi [0,E_Balise.Distance]));
+		posiY1 := (COS (AngleRAD)*(G_Balise.ArrayEnnemi [0,E_Balise.Distance]));
+		
+		AngleRelativeRAD1 := G_Odometrie.lrAngle - AngleRAD;
+		
+		IF AngleRelativeRAD1 > 2*PI THEN 
+			AngleRelativeRAD1 := AngleRelativeRAD1 - 2*PI;
+		ELSIF AngleRelativeRAD1 < 0 THEN 
+			AngleRelativeRAD1 := AngleRelativeRAD1 + 2*PI;				
+		END_IF
+		
+		coordX1 := G_Odometrie.lrPositionX + (COS(AngleRelativeRAD1) * G_Balise.ArrayEnnemi [0,1]);
+		coordY1 := -(G_Odometrie.lrPositionY + (SIN(AngleRelativeRAD1) * G_Balise.ArrayEnnemi [0,1]));
+		
+		G_Balise.lrCoord_X1 := coordX1;
+		G_Balise.lrCoord_Y1 := -coordY1;
+		
+	ELSIF (G_Balise.ArrayEnnemi [0,E_Balise.Angle] = 9000) AND (G_Balise.ArrayEnnemi [0,E_Balise.Distance] = 9000) AND balise_active THEN ;	
+		Nothing1 := 1;
+		G_Balise.lrCoord_X1 := -9000;
+		G_Balise.lrCoord_X1 := -9000;
+	END_IF   
+	//adapation des valeurs du 2eme récepteur pour les afficher sur la visu
+	IF (G_Balise.ArrayEnnemi [1,E_Balise.Angle] < 9000) AND (G_Balise.ArrayEnnemi [1,E_Balise.Distance] < 9000) THEN;
+		Nothing2 := 0;	
+		AngleRAD2 := ((G_Balise.ArrayEnnemi [1,0])*2*PI)/360;
+		posiX2 := (SIN (AngleRAD2)*(G_Balise.ArrayEnnemi [1,E_Balise.Distance]));
+		posiY2 := (COS (AngleRAD2)*(G_Balise.ArrayEnnemi [1,E_Balise.Distance]));
+		coordX2 := G_Odometrie.lrPositionX + posiX2;
+		coordY2 := G_Odometrie.lrPositionY + posiY2;
+		
+		AngleRelativeRAD2 := G_Odometrie.lrAngle - AngleRAD2;
+		
+		IF AngleRelativeRAD2 > 2*PI THEN 
+			AngleRelativeRAD2 := AngleRelativeRAD2 - 2*PI;
+		ELSIF AngleRelativeRAD2 < 0 THEN 
+			AngleRelativeRAD2 := AngleRelativeRAD2 + 2*PI;				
+		END_IF
+		
+		coordX2 := G_Odometrie.lrPositionX + (COS(AngleRelativeRAD2) * G_Balise.ArrayEnnemi [1,E_Balise.Distance]);
+		coordY2 := -(G_Odometrie.lrPositionY + (SIN(AngleRelativeRAD2) * G_Balise.ArrayEnnemi [1,E_Balise.Distance]));
+		
+		G_Balise.lrCoord_X2 := coordX2;
+		G_Balise.lrCoord_Y2 := -coordY2;
+		
+	ELSIF (G_Balise.ArrayEnnemi [0,E_Balise.Angle] = 9000) AND (G_Balise.ArrayEnnemi [0,E_Balise.Distance] = 9000) AND balise_active  THEN;
+		Nothing2 := 1;
+		G_Balise.lrCoord_X1 := -9000;
+		G_Balise.lrCoord_Y1 := -9000;
+	END_IF
+	//adapation des valeurs du 3eme récepteur pour les afficher sur la visu
+	IF (G_Balise.ArrayEnnemi [2,E_Balise.Angle] < 9000) AND (G_Balise.ArrayEnnemi [2,E_Balise.Distance] < 9000) THEN;
+		Nothing3 := 0;	
+		AngleRAD3 := ((G_Balise.ArrayEnnemi [2,0])*2*PI)/360;
+		posiX3 := (SIN (AngleRAD3)*(G_Balise.ArrayEnnemi [2,E_Balise.Distance]));
+		posiY3 := (COS (AngleRAD3)*(G_Balise.ArrayEnnemi [2,E_Balise.Distance]));
+		coordX3 := G_Odometrie.lrPositionX + posiX3;
+		coordY3 := G_Odometrie.lrPositionY + posiY3;
+		
+		AngleRelativeRAD3 := G_Odometrie.lrAngle - AngleRAD3;
+		
+		IF AngleRelativeRAD3 > 2*PI THEN 
+			AngleRelativeRAD3 := AngleRelativeRAD3 - 2*PI;
+		ELSIF AngleRelativeRAD3 < 0 THEN 
+			AngleRelativeRAD3 := AngleRelativeRAD3 + 2*PI;				
+		END_IF
+		
+		coordX3 := G_Odometrie.lrPositionX + (COS(AngleRelativeRAD3) * G_Balise.ArrayEnnemi [2,E_Balise.Distance]);
+		coordY3 := -(G_Odometrie.lrPositionY + (SIN(AngleRelativeRAD3) * G_Balise.ArrayEnnemi [2,E_Balise.Distance]));
+		
+		G_Balise.lrCoord_X3 := coordX3;
+		G_Balise.lrCoord_Y3 := -coordY3;
+		
+	ELSIF (G_Balise.ArrayEnnemi [0,E_Balise.Angle] = 9000) AND (G_Balise.ArrayEnnemi [0,E_Balise.Distance] = 9000) AND balise_active   THEN;
+		Nothing3 := 1;	
+		G_Balise.lrCoord_X3 := -9000;
+		G_Balise.lrCoord_Y3 := -9000;
+	END_IF
+	
+	
+	//condition distance 550mm 
+	IF (G_Balise.ArrayEnnemi [0,E_Balise.Distance] < 550) AND (G_Balise.ArrayEnnemi [0,1]  <>  0)   THEN;
+			D1_40cm := 1;
+		ELSE 
+			D1_40cm := 0;
+	END_IF
+	IF (G_Balise.ArrayEnnemi [1,E_Balise.Distance] < 550) AND (G_Balise.ArrayEnnemi [1,1]  <>  0)  THEN;
+			D2_40cm := 1;
+		ELSE 
+			D2_40cm := 0;
+	END_IF
+	IF (G_Balise.ArrayEnnemi [2,E_Balise.Distance] < 550) AND (G_Balise.ArrayEnnemi [2,1]  <>  0) THEN;
+			D3_40cm := 1;
+		ELSE 
+			D3_40cm := 0;
+	END_IF
+	
+	
+	//-------------------------------------------------------------------------------------------------------
+	
+	//condition 4 position devant, derrière, gauche, droite	pour afficher sur la VISU
+	IF 		(D1_40cm AND NOT Nothing1 AND ((G_Balise.ArrayEnnemi [0,E_Balise.Angle]  <= 45) OR (G_Balise.ArrayEnnemi [0,E_Balise.Angle] >= 315)))
+		OR	(D2_40cm AND NOT Nothing2 AND ((G_Balise.ArrayEnnemi [1,E_Balise.Angle]  <= 45) OR (G_Balise.ArrayEnnemi [1,E_Balise.Angle] >= 315)))
+		OR	(D3_40cm AND NOT Nothing3 AND ((G_Balise.ArrayEnnemi [2,E_Balise.Angle]  <= 45) OR (G_Balise.ArrayEnnemi [2,E_Balise.Angle] >= 315))) THEN
+			Angle0deg := 0;
+		ELSE 
+			Angle0deg := 1;
+	END_IF
+	IF 		(D1_40cm AND NOT Nothing1 AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle] <= 135) AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle] >= 45))
+		OR  (D2_40cm AND NOT Nothing2 AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle] <= 135) AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle] >= 45))
+		OR  (D3_40cm AND NOT Nothing3 AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle] <= 135) AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle] >= 45)) THEN;
+			Angle90deg := 0;
+		ELSE 
+			Angle90deg := 1;
+	END_IF
+	IF 		(D1_40cm AND NOT Nothing1 AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle] <= 225) AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle] >= 135))
+		OR	(D2_40cm AND NOT Nothing2 AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle] <= 225) AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle] >= 135))
+		OR	(D3_40cm AND NOT Nothing3 AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle] <= 225) AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle] >= 135)) THEN;
+			Angle180deg := 0;
+		ELSE 
+			Angle180deg := 1;
+	END_IF
+	IF 		(D1_40cm AND NOT Nothing1 AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle] <= 315) AND (G_Balise.ArrayEnnemi [0,E_Balise.Angle] >= 225))
+		OR	(D2_40cm AND NOT Nothing2 AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle] <= 315) AND (G_Balise.ArrayEnnemi [1,E_Balise.Angle] >= 225))
+		OR	(D3_40cm AND NOT Nothing3 AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle] <= 315) AND (G_Balise.ArrayEnnemi [2,E_Balise.Angle] >= 225)) THEN;
+			Angle270deg := 0;
+		ELSE 
+			Angle270deg := 1;
+	END_IF
+	
+	// Chargement des valeurs dans la visualisation
+	G_Balise.lrAngle_1		:= G_Balise.ArrayEnnemi [0,E_Balise.Angle];
+	G_Balise.lrAngle_2		:= G_Balise.ArrayEnnemi [1,E_Balise.Angle];
+	G_Balise.lrAngle_3		:= G_Balise.ArrayEnnemi [2,E_Balise.Angle];
+	G_Balise.lrDistance_1	:= G_Balise.ArrayEnnemi [0,E_Balise.Distance];
+	G_Balise.lrDistance_2	:= G_Balise.ArrayEnnemi [1,E_Balise.Distance];
+	G_Balise.lrDistance_3	:= G_Balise.ArrayEnnemi [2,E_Balise.Distance];
+END_IF;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_Balise">
+      <LineId Id="3198" Count="201" />
+      <LineId Id="1753" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Balise._M_Angle_enemi">
+      <LineId Id="19" Count="1" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Balise._M_Distance_enemi">
+      <LineId Id="6" Count="3" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="15" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Balise.M_visu">
+      <LineId Id="119" Count="0" />
+      <LineId Id="32" Count="6" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="157" Count="3" />
+      <LineId Id="162" Count="1" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="207" Count="2" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="39" Count="2" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="42" Count="6" />
+      <LineId Id="132" Count="1" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="187" Count="8" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="214" Count="1" />
+      <LineId Id="51" Count="6" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="198" Count="8" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="216" Count="2" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="219" Count="1" />
+      <LineId Id="60" Count="58" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="123" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

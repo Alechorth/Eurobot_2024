@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="G_Visus" Id="{67770e69-00d0-44a9-8a94-f1704dbb7172}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	//Visu V_Config
+	bConfigEnable : BOOL;	
+	bConfigReady : BOOL;
+	bConfigStart : BOOL;
+	bConfigReset : BOOL;
+	bConfigBalise : BOOL;
+	bConfigMoteurPower : BOOL;
+	bConfigMoteurReady	: BOOL;
+	bConfigMarcheArriere : BOOL;
+	bConfigChoixCote : BOOL; //True = atelier, FALSE = bureau
+	bConfigMoveDone : BOOL;
+	
+	lrConfigPosX : LREAL;
+	lrConfigPosY : LREAL;
+	lrConfigVitesse : LREAL;
+	lrConfigAcc : LREAL;
+	lrConfigDecc : LREAL;
+	
+	lrConfigErreurX : LREAL;
+	lrConfigErreurY : LREAL;
+	lrConfigErreurX_pourcent : LREAL;
+	lrConfigErreurY_pourcent : LREAL;
+	
+	//Visu V_Init
+	bInitStart		   	: BOOL;
+	iInitProgressBar    : INT;
+	bInitPrematch		: BOOL;
+	bInitChoixCote 		: BOOL;
+	iInitChoixParcours 	: INT;
+	bInitStartMatch		: BOOL;
+	bInitPyScriptRunning: BOOL;
+	bInitStartPyscript	: BOOL;
+	bInitStopPyscript	: BOOL;
+	
+	//Visu V_Menu
+	bMenuRestart		: BOOL;
+	
+	//Visu V_Match
+	bMatchEnemi			: BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

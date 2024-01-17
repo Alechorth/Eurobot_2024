@@ -1,0 +1,720 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_DXL_AX12A" Id="{a8b89428-cc15-42e6-9b9b-e54d24f69948}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DXL_AX12A
+VAR_INPUT 
+	id : INT; // ID du moteur Dynamixel de 0 à 253. Addresse 254 => broadcast (cible tous les moteurs)
+END_VAR
+VAR  
+	//communication en cours
+	com_ongoing : BOOL;
+	// modèle du moteur
+	motor_type : USINT:= AX12A;
+END_VAR
+VAR CONSTANT
+	//type du moteur
+	XL430:USINT:=2;
+	AX12A:USINT:=1;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//author: Alec Horth
+//mail  : horth.alec@gmail.com]]></ST>
+    </Implementation>
+    <Folder Name="Envoi de commande (send)" Id="{4d223e2f-740b-4dd6-a36d-1e90289a33fa}" />
+    <Folder Name="Fonctions internes" Id="{bfd163d2-378f-464d-87fa-1e4d312c46b3}" />
+    <Folder Name="Reception d'informations (get)" Id="{428f3efd-9066-4761-937c-c85eaa4dedb9}" />
+    <Method Name="_end_communication" Id="{2fc9e827-a9f4-411e-9287-3b6495c46ff3}" FolderPath="Fonctions internes\">
+      <Declaration><![CDATA[METHOD PROTECTED _end_communication : BOOL
+VAR_IN_OUT
+	run:BOOL; // arrête la variable qui maintient la fonction en vie 
+	started:BOOL; // arrête la variable qui indique que la fonction possède un token
+END_VAR
+VAR_INST
+	pulse : F_TRIG;
+	once : bool;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// front descendant activé par le script python et désactivé par la fonction _send()
+// confirme que la commande à bien été envoyée
+pulse(CLK:=G_DXL.bDone AND started, Q=>);
+
+IF pulse.Q THEN 
+	//permet de lancer cette fonction une seule fois, sinon elle relance un cycle de façon involontaire 
+	once := TRUE;
+END_IF
+
+IF once THEN
+	// libère le token
+	G_DXL.bToken := G_DXL.iOPEN_TOKEN;
+	com_ongoing := FALSE;
+	run := FALSE;
+	_end_communication := TRUE;
+	started := FALSE;
+	once := FALSE;
+ELSE
+	_end_communication := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_send" Id="{110a2c74-07bc-47bd-b079-f8c2693b9f05}" FolderPath="Fonctions internes\">
+      <Declaration><![CDATA[METHOD PROTECTED _send : BOOL
+VAR_INPUT
+END_VAR
+VAR_INST
+	once :BOOL; // assure que la commande n'est envoyé qu'une fois
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF G_DXL.bDone THEN 	//confirmation d'acquisition de la commande du script python
+	G_DXL.bRun := FALSE; //indique au script python que le message est passé
+ELSIF NOT G_DXL.bDone AND NOT once THEN // si la commande n'a pas encore été envoyé, lance la commande
+	once := TRUE;
+	G_DXL.bRun := TRUE;
+END_IF
+
+IF NOT com_ongoing THEN // permet de relancer des commandes lorsque le token est rendu
+	once := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_start_communication" Id="{ee6e3043-f563-4412-aa8e-6c5f35f04771}" FolderPath="Fonctions internes\">
+      <Declaration><![CDATA[METHOD PROTECTED _start_communication : BOOL
+VAR_IN_OUT
+	started:BOOL; //maintient la fonction active tant que le token n'est pas rendu
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ((G_DXL.bToken = G_DXL.iOPEN_TOKEN OR G_DXL.bToken = id) AND NOT com_ongoing AND NOT G_DXL.bDone) OR started THEN // vérifie que tous les token soient libres
+	// attribution du token
+	started := TRUE; 
+	G_DXL.bToken := id;
+	// configure les commandes à envoyer avec le bon ID et le bon type du moteur
+	G_DXL.iID := id;
+	G_DXL.usiMotor_type := motor_type;
+	com_ongoing := TRUE; 
+	_start_communication := TRUE;	
+ELSE 
+	_start_communication := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="BASE_EXEMPLE_FUTUR_MODIF_SEND" Id="{ac158a6e-0e31-465e-9c4d-479095b9d21f}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD private BASE_EXEMPLE_FUTUR_MODIF_SEND 
+VAR_INPUT
+	EN			:BOOL; // un front montant change le taux d'accélération du moteur
+	
+	//--------------TO DO---------------
+	parametre1	:usint;
+	parametre2	:INT;
+	//----------------------------------
+
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; //la commande est envoyée, passe à False si EN passe aussi à False
+END_VAR
+VAR_INST 
+	bRun 		:BOOL;
+	rtrigPulse 	:R_TRIG;
+	bDone_pulse :BOOL;
+	bStarted 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// IL EST POSSIBLE DE MODIFIER LES SECTION "TO DO", LE RESTE NE DOIT PAS ÊTRE MODIFIE
+
+//Activation de la fonction
+rtrigPulse(CLK:=EN, Q=>);
+
+IF rtrigPulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	bRun := TRUE;
+END_IF
+
+IF bRun THEN
+	IF _start_communication(started:=bStarted) THEN 	//vérifie si les tokens sont libérés 
+		
+		//--------------TO DO---------------
+		G_DXL.usiFonction := G_DXL.usiGOAL_ACCELERATION; 	// choix de la commande à envoyer		
+		G_DXL.usiAcceleration 	:= parametre1;				//paramètre 1
+		G_DXL.iSpeed    		:= parametre2;				//paramètre 2 
+		//----------------------------------
+		
+		
+		bDone_pulse := _end_communication(run:=bRun, started:=bStarted) AND EN;	//libère le token une fois que la commande est lancée
+		_send();																//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF bDone_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF bDone_pulse AND NOT EN THEN
+	bDone_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="get_load" Id="{aa2185c7-0ebb-48bc-81ec-ed1bf4388e9c}" FolderPath="Reception d'informations (get)\">
+      <Declaration><![CDATA[METHOD get_load : BOOL
+VAR_INPUT
+	EN:BOOL; 	// ouvre un canal de transmission avec le moteur 
+END_VAR
+VAR_OUTPUT
+	load:INT; 	// le moteur renvoie le torque qu'il emet à travers le canal (voir dans la méthode pour + d'infos)
+				//(AX12A) 0-1023 torque est dans le sens inverse des aiguilles d'une montre, entre 1024 et 2047 le torque est dans le sens des aiguilles d'une montre
+				//(XL430) +- 1000 pour mille du torque maximum si la valeur est positive => le torque est dans le sens inverse des aiguilles d'une montre
+END_VAR
+VAR_inst 
+	run :BOOL;
+	pulse : R_TRIG;
+	started: BOOL;
+END_VAR
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//ouvre le canal de transmission
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) le canal ne peut pas être ouvert
+	//La variable run garde l'ordre d'activation en mémoire et ouvre le canal dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN 
+	IF _start_communication(started := started) THEN 	// Vérifie si le token est libre
+		G_DXL.usiFonction := G_DXL.usiGET_PRESENT_LOAD;	// configure le canal à ouvrir
+		G_DXL.bRun := TRUE;								// envoie la commande au script python
+		load := G_DXL.iDxl_load;						// si le canal est ouvert, renvoie la valeur actuelle du torque émit pas le moteur
+	END_IF
+	IF NOT EN THEN
+		G_DXL.bRun 	:= FALSE;						    //ferme le canal
+		G_DXL.iDxl_load := -9000;						//remet une valeur par défault
+		_end_communication(run:=run,started := started);//libère le token
+	END_IF;
+ELSE
+	load := -9000;										//valeur par défaut
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="get_movement" Id="{8dce1c95-0884-4dc5-a263-55778152c5f8}" FolderPath="Reception d'informations (get)\">
+      <Declaration><![CDATA[METHOD get_movement : BOOL
+VAR_INPUT
+	EN:BOOL; 	// ouvre un canal de transmission avec le moteur 
+END_VAR
+VAR_OUTPUT
+	mouvement:BOOL; // le moteur renvoie si il est en mouvement(TRUE) ou non (FALSE)
+END_VAR
+VAR_INST 
+	run :BOOL;
+	pulse : R_TRIG;
+	started: BOOL;
+END_VAR
+	
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//ouvre le canal de transmission
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) le canal ne peut pas être ouvert
+	//La variable run garde l'ordre d'activation en mémoire et ouvre le canal dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN 
+	IF _start_communication(started := started) THEN 	// Vérifie si le token est libre
+		G_DXL.usiFonction := G_DXL.usiGET_PRESENT_MOVEMENT;	// configure le canal à ouvrir
+		G_DXL.bRun := TRUE;								// envoie la commande au script python
+		mouvement := G_DXL.bDxl_movement;				// status du mouvement du moteur Dynamixel
+	END_IF
+	IF NOT EN THEN
+		G_DXL.bRun 	:= FALSE;						    //ferme le canal
+		G_DXL.bDxl_movement := 1;						//remet une valeur par défault
+		_end_communication(run:=run,started := started);//libère le token
+	END_IF;
+ELSE
+	mouvement := 1;										//valeur par défaut
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="get_position" Id="{5e21b2cc-26fb-4113-ac0c-da978066383b}" FolderPath="Reception d'informations (get)\">
+      <Declaration><![CDATA[METHOD get_position : BOOL
+VAR_INPUT
+	EN:BOOL; 	// ouvre un canal de transmission avec le moteur 
+END_VAR
+VAR_OUTPUT
+	position:DINT; //(AX12A sur 300 degrés)0-1023 ou (XL430 sur 360 degrés)0-4095 ou (XL430 en multitours)+- 1'048'575
+END_VAR
+VAR_INST 
+	run :BOOL;
+	pulse : R_TRIG;
+	started: BOOL;
+END_VAR
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//ouvre le canal de transmission
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) le canal ne peut pas être ouvert
+	//La variable run garde l'ordre d'activation en mémoire et ouvre le canal dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN 
+	IF _start_communication(started := started) THEN 	// Vérifie si le token est libre
+		G_DXL.usiFonction := G_DXL.usiGET_PRESENT_POSITION;	// configure le canal à ouvrir
+		G_DXL.bRun := TRUE;								// envoie la commande au script python
+		position := G_DXL.diDxl_position;				//(AX12A sur 300 degrés)0-1023 ou (XL430 sur 360 degrés)0-4095 ou (XL430 en multitours)+- 1'048'575
+	END_IF
+	IF NOT EN THEN
+		G_DXL.bRun 	:= FALSE;						    //ferme le canal
+		G_DXL.diDxl_position := -9000;					//remet une valeur par défault
+		_end_communication(run:=run,started := started);//libère le token
+	END_IF;
+ELSE
+	position := -9000;									//valeur par défaut
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="send_disable_torque" Id="{82a36a33-4d96-43de-bdf8-086a092a9166}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD send_disable_torque 
+VAR_INPUT
+	EN			:BOOL; // un impulsion active le torque du moteur
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; //la commande est envoyée, passe à False si EN passe aussi à False
+END_VAR
+VAR_INST 
+	run 		:BOOL;
+	pulse 		:R_TRIG;
+	done_pulse 	:BOOL;
+	started 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Activation de la fonction
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN
+	IF _start_communication(started:=started) THEN 								//vérifie si les tokens sont libérés 
+		G_DXL.usiFonction := G_DXL.usiDISABLE_TORQUE;									//Ecriture de la commande
+		done_pulse := _end_communication(run:=run, started:=started) AND EN;	//libère le token une fois que la commande est lancée
+		_send();																//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF done_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF done_pulse AND NOT EN THEN
+	done_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="send_enable_torque" Id="{8823eadf-b5c9-4b74-bca8-e443dfd750e5}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD send_enable_torque 
+VAR_INPUT
+	EN			:BOOL; // un front montant désactive le torque du moteur 
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; // la commande est envoyée, passe à False si EN passe aussi à False 
+END_VAR
+VAR_INST 
+	run 		:BOOL;
+	pulse 		:R_TRIG;
+	done_pulse 	:BOOL;
+	started 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Activation de la fonction
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN
+	IF _start_communication(started:=started) THEN 								//vérifie si les tokens sont libérés 
+		G_DXL.usiFonction := G_DXL.usiENABLE_TORQUE;									//Ecriture de la commande
+		done_pulse := _end_communication(run:=run, started:=started) AND EN;	//libère le token une fois que la commande est lancée
+		_send();																//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF done_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF done_pulse AND NOT EN THEN
+	done_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="send_led_off" Id="{6d01edd7-bf7e-4acd-9ba9-7bbc279989ba}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD send_led_off 
+VAR_INPUT
+	EN			:BOOL; // un front montant éteint la LED
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; // la commande est envoyée, passe à False si EN passe aussi à False 
+END_VAR
+VAR_INST 
+	run 		:BOOL;
+	pulse 		:R_TRIG;
+	done_pulse 	:BOOL;
+	started 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Activation de la fonction
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN
+	IF _start_communication(started:=started) THEN 								//vérifie si les tokens sont libérés 
+		G_DXL.usiFonction := G_DXL.usiLED_OFF;										//Ecriture de la commande
+		done_pulse := _end_communication(run:=run, started:=started) AND EN;	//libère le token une fois que la commande est lancée
+		_send();																//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF done_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF done_pulse AND NOT EN THEN
+	done_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="send_led_on" Id="{a390564d-89f9-4721-8d0d-3cc138f2c903}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD send_led_on 
+VAR_INPUT
+	EN			:BOOL; // un front montant allume la LED
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; // la commande est envoyée, passe à False si EN passe aussi à False 
+END_VAR
+VAR_INST 
+	run 		:BOOL;
+	pulse 		:R_TRIG;
+	done_pulse 	:BOOL;
+	started 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Activation de la fonction
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN
+	IF _start_communication(started:=started) THEN 								//vérifie si les tokens sont libérés 
+		G_DXL.usiFonction := G_DXL.usiLED_ON;											//Ecriture de la commande
+		done_pulse := _end_communication(run:=run, started:=started) AND EN;	//libère le token une fois que la commande est lancée
+		_send();																//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF done_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF done_pulse AND NOT EN THEN
+	done_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="send_operating_mode" Id="{edaae7ba-c535-4d2f-922b-f45480cf6cd7}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD send_operating_mode 
+VAR_INPUT
+	EN			:BOOL; // un front montant change le mode de pilotage du moteur
+	mode		:STRING;//‘position’ ou 'position_angleMin_angleMax’ => ex: 'position_10_100' ou ‘velocity’
+
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; //la commande est envoyée, passe à False si EN passe aussi à False 
+END_VAR
+VAR_INST 
+	run 		:BOOL;
+	pulse 		:R_TRIG;
+	done_pulse 	:BOOL;
+	started 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Activation de la fonction
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN
+	IF _start_communication(started:=started) THEN 								//vérifie si les tokens sont libérés 
+		G_DXL.usiFonction := G_DXL.usiOPERATING_MODE;									//Ecriture de la commande
+		G_DXL.sMode := mode;
+		done_pulse := _end_communication(run:=run, started:=started) AND EN;	//libère le token une fois que la commande est lancée
+		_send();																//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF done_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF done_pulse AND NOT EN THEN
+	done_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="send_position" Id="{11ae4654-d0e1-493c-b0a2-cd69c058560b}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD send_position 
+VAR_INPUT
+	EN			:BOOL; // un front montant déplace le moteur à la position voulue
+	position	:DINT; //(AX12A sur 300 degrés)0-1023 ou (XL430 sur 360 degrés)0-4095 ou (XL430 en multitours)+- 1'048'575
+	vitesse		:INT;  //(AX12A)0-1023 ou (XL430)0-1023 
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; // la commande est envoyée, passe à False si EN passe aussi à False 
+END_VAR
+VAR_INST 
+	run 		:BOOL;
+	pulse 		:R_TRIG;
+	done_pulse 	:BOOL;
+	started 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Activation de la fonction
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN
+	IF _start_communication(started:=started) THEN 								//vérifie si les tokens sont libérés 
+		G_DXL.usiFonction := G_DXL.usiGOAL_POSITION;									//Ecriture de la commande
+		G_DXL.diPosition := position;
+		G_DXL.iSpeed    := vitesse;
+		done_pulse := _end_communication(run:=run, started:=started) AND EN;	//libère le token une fois que la commande est lancée
+		_send();																//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF done_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF done_pulse AND NOT EN THEN
+	done_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="send_stop_position" Id="{9ff29d00-8d00-4572-8607-825eb34c095a}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD send_stop_position 
+VAR_INPUT
+	EN			:BOOL; // un front montant arrête le moteur à sa position actuelle
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; // la commande est envoyée, passe à False si EN passe aussi à False 
+END_VAR
+VAR_INST 
+	run 		:BOOL;
+	pulse 		:R_TRIG;
+	done_pulse 	:BOOL;
+	started 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Activation de la fonction
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN
+		IF _start_communication(started:=started) THEN 								//vérifie si les tokens sont libérés 
+		G_DXL.usiFonction := G_DXL.usiSTOP_POSITION;										//Ecriture de la commande
+		done_pulse := _end_communication(run:=run, started:=started) AND EN;		//libère le token une fois que la commande est lancée
+		_send();																	//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF done_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF done_pulse AND NOT EN THEN
+	done_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="send_velocity" Id="{c1e53489-67c3-49db-8771-1a0d92732408}" FolderPath="Envoi de commande (send)\">
+      <Declaration><![CDATA[METHOD send_velocity 
+VAR_INPUT
+	EN			:BOOL; // un front montant donne une nouvelle vitesse au moteur en mode velocity
+	vitesse		:INT;  //(AX12A)0-2047
+END_VAR
+VAR_OUTPUT
+	done		:BOOL; // la commande est envoyée, passe à False si EN passe aussi à False 
+END_VAR
+VAR_INST 
+	run 		:BOOL;
+	pulse 		:R_TRIG;
+	done_pulse 	:BOOL;
+	started 	:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Activation de la fonction
+pulse(CLK:=EN, Q=>);
+
+IF pulse.Q THEN
+	//Si une autre fonction est déjà en cours de traitement (token déjà pris) cette fonction ne peut pas être effectuée
+	//La variable run garde l'ordre d'activation en mémoire et lance la fonction dès que le token est libéré
+	run := TRUE;
+END_IF
+
+IF run THEN
+	IF _start_communication(started:=started) THEN 								//vérifie si les tokens sont libérés 
+		G_DXL.usiFonction := G_DXL.usiGOAL_VELOCITY;									//Ecriture de la commande
+		G_DXL.iSpeed    := vitesse;
+		done_pulse := _end_communication(run:=run, started:=started) AND EN;	//libère le token une fois que la commande est lancée
+		_send();																//Envoi de la commande au moteur
+	END_IF
+END_IF;
+
+IF done_pulse AND EN THEN														//Affiche le status d'excution de la fonction
+	done := EN;																	//tant que EN est à True
+ELSIF done_pulse AND NOT EN THEN
+	done_pulse := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_DXL_AX12A">
+      <LineId Id="49" Count="0" />
+      <LineId Id="64" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A._end_communication">
+      <LineId Id="35" Count="1" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="9" Count="2" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A._send">
+      <LineId Id="6" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="31" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A._start_communication">
+      <LineId Id="5" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="9" Count="1" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.BASE_EXEMPLE_FUTUR_MODIF_SEND">
+      <LineId Id="57" Count="1" />
+      <LineId Id="20" Count="11" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="34" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.get_load">
+      <LineId Id="60" Count="21" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.get_movement">
+      <LineId Id="52" Count="21" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.get_position">
+      <LineId Id="66" Count="21" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.send_disable_torque">
+      <LineId Id="74" Count="20" />
+      <LineId Id="12" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.send_enable_torque">
+      <LineId Id="55" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="26" Count="1" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="49" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.send_led_off">
+      <LineId Id="6" Count="20" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.send_led_on">
+      <LineId Id="19" Count="11" />
+      <LineId Id="33" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.send_operating_mode">
+      <LineId Id="29" Count="12" />
+      <LineId Id="43" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.send_position">
+      <LineId Id="19" Count="11" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="31" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.send_stop_position">
+      <LineId Id="21" Count="20" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DXL_AX12A.send_velocity">
+      <LineId Id="22" Count="11" />
+      <LineId Id="35" Count="9" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

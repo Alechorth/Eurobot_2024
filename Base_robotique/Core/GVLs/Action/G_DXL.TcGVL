@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <GVL Name="G_DXL" Id="{2b6de3ce-cfe2-46a1-88a3-6ea42420dcd5}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+//author: Alec Horth
+
+//servent à la communication PYADS (! ne pas modifier)
+//seulement accessible au FB "FB_DXL_ALL"
+VAR_GLOBAL 
+	//activation des fonction du moteur dynamixel
+	bRun					:BOOL;		// action la fonction
+	bStop_python_script		:BOOL; 		// arrête le script python
+	
+	//commande envoyé au moteur 
+	iID						:INT;		// id du motor 
+	usiMotor_type			:USINT;		// type du moteur 1 => AX12A, 2 => XL430
+	usiFonction 			:USINT;		// fonction à executer
+	sMode					:STRING;	// configuration du mode de fonctionnement (position, velocité)
+	iSpeed					:INT;		// configuration de la vitesse
+	diPosition				:DINT;		// configuration de la position
+	usiAcceleration			:USINT; 	// configuration de l'accelération du moteur
+	bReset					:BOOL;		// reset de la position en mode multitour
+	
+	//information du moteur
+	iDxl_load				:INT; 
+	diDxl_position			:DINT;
+	bDxl_movement			:BOOL;
+	bDone					:BOOL;		//action reçue et envoyée
+	bPyscript_running		:BOOL;		//le script python est actif
+	
+	// semaphore (contrôle qu'il n'y aie qu'une communication à la fois avec le moteur)
+	// indique l'ID de l'instance qui a le droit de communiquer avec le moteur
+	// Token disponible => -16#FE ou -254 ou -1 * id_du_moteur_ayant_la_permission
+	bToken					:INT:= -16#FE; 
+	
+	//activation du script python
+	bRestart_py_script		:BOOL;
+END_VAR
+
+//type de commandes à envoyer au moteur
+VAR_GLOBAL CONSTANT 
+	//RAM
+	usiOPERATING_MODE		:USINT := 0;
+	
+	//ACTION
+	usiENABLE_TORQUE		:USINT := 1; 
+	usiDISABLE_TORQUE		:USINT := 2;
+	usiLED_ON				:USINT := 3;
+	usiLED_OFF				:USINT := 4;
+	usiGOAL_ACCELERATION	:USINT := 5;
+	usiGOAL_VELOCITY		:USINT := 6;
+	usiGOAL_POSITION		:USINT := 7;
+	
+	//prédicat
+	usiGET_PRESENT_POSITION:USINT := 8;
+    usiGET_PRESENT_LOAD	:USINT := 9;
+    usiGET_PRESENT_MOVEMENT:USINT := 10;
+	
+	//fonction accessoire du mode position
+	usiSTOP_POSITION		:USINT := 11;
+	usiRESET_POSITION		:USINT := 12;
+	
+	//token libre
+	iOPEN_TOKEN			:INT   := -254;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

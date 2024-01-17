@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <Task Name="BaliseTask" Id="{abc90e40-f88d-494c-9e1b-8ea214d4ac56}">
+    <!--CycleTime in micro seconds.-->
+    <CycleTime>1000</CycleTime>
+    <Priority>5</Priority>
+    <PouCall>
+      <Name>ITInterruption</Name>
+    </PouCall>
+    <TaskFBGuid>{5f12a8e9-538f-479d-a104-02e2b223cc22}</TaskFBGuid>
+    <Fb_init>{9f5ec88b-c37f-41d8-8d04-80ae34e2600f}</Fb_init>
+    <Fb_exit>{460530c7-a70f-43a9-8e80-2e403f602f40}</Fb_exit>
+    <CycleUpdate>{afe55327-4259-410e-8c48-6dbb932ac9b4}</CycleUpdate>
+    <PostCycleUpdate>{a407da71-098e-4ec8-9e5e-10f68653ea43}</PostCycleUpdate>
+  </Task>
+</TcPlcObject>

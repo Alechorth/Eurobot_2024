@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="ST_Dynamixel_Control_Output" Id="{b6a0728a-0a00-4532-877e-5664be7bd7d1}">
+    <Declaration><![CDATA[TYPE ST_Dynamixel_Control_Output :
+	STRUCT	
+		bEnableTorque : BOOL;
+		bDisableTorque: BOOL;
+		
+		bLedOn : BOOL;
+		bLedOff : BOOL;
+		
+		bOperatingMode : BOOL;
+		
+		bPosition : BOOL;
+		bStopPosition : BOOL;
+		bResetPosition : BOOL;
+		bAcceleration : BOOL;
+		bVelocity : BOOL;
+
+		INFO_load_int :INT := -9000;
+		INFO_Mouvement_bool : BOOL := 1;
+		INFO_Position_dint : DINT := -9000;
+	END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

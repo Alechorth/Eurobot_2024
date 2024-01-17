@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="G_init" Id="{dd8f2ae2-9e5b-4c5f-be43-43b6a2decc3a}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	ietapeInit    	:INT;
+	binitDone 		:BOOL;
+	icounter 		:INT;
+	iNombreEtapeInit:INT;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

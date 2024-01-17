@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="ST_Tableau" Id="{4dd442a7-1dc4-434d-a7bf-4758fc40670a}">
+    <Declaration><![CDATA[TYPE ST_Tableau : // Appel des variables qui permettent de faire les différentes tâches
+	STRUCT
+		TypeTache			: E_Type_Tache;			// Permet la tâche qu'on va faire à la ligne du tableau
+		TypeDeplacement     : E_Type_motion;        // Permet de choisir le type de déplacement
+		TypeAction			: STRING(50);			// Choisi le type d'action
+		lrPositionX_mm		: LREAL;				// Position en x que l'on veut donner au robot lors d'un déplacement
+		lrPositionY_mm		: LREAL;				// Position en y que le robot doit atteindre lors d'un déplacement
+		lrAngleVoulu_deg	: LREAL;				// Angle que l'on veut atteindre lors d'une rotation, en fonction de l'angle de référence dans Odometrie
+		lrDistanceVoulu_mm	: LREAL;				// Distance que le robot va avancer
+		lrVitesse_mms		: LREAL;				// Vitesse de déplacement du robot quand il fait un mouvement ou une rotation
+		lrRayonCourbe_mm	: LREAL;
+		tAttente_ms			: TIME;					// Temps que le robot va attendre quand la tâche attente est choisie
+		uiAjoutPoints_pts	: INT;					// Nombre de points que l'on veut ajouter sur le compteur
+		bArretDetection		: BOOL;					// Désactivation de la détection de la balise, le robot ne s'arrête plus quand il détecte un adversaire, sert à pouvoir démarrer si nos robots ont aussi des catadioptres
+	END_STRUCT
+END_TYPE
+
+//garder tache point ]]></Declaration>
+  </DUT>
+</TcPlcObject>

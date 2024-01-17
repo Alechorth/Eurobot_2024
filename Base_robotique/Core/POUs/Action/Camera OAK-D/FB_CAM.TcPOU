@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_CAM" Id="{bbef3e1a-0090-4306-af96-8827d31b9c29}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CAM
+VAR_INPUT
+	bAruco 	: BOOL;
+	bProxi	: BOOL;
+END_VAR
+VAR_OUTPUT
+	TAruco 			: ARRAY [0..10] OF INT;
+	usiProximite 	: USINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//author: Alec Horth
+
+//gestion des fonctionnalités de la caméra
+// voir GVL "G_CAM" pour plus de détails d'implémentation
+G_CAM.RUN_ARUCO := bAruco;
+IF bAruco THEN
+	TAruco := G_CAM.tag_aruco;
+END_IF
+
+G_CAM.RUN_STEREO := bProxi;
+IF bProxi THEN
+	usiProximite := G_CAM.proximite;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CAM">
+      <LineId Id="19" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="34" Count="3" />
+      <LineId Id="33" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

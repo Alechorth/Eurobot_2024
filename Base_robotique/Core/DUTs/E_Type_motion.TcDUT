@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="E_Type_motion" Id="{2ae8d345-f9b0-49b5-9d8f-dd053471f6b7}">
+    <Declaration><![CDATA[TYPE E_Type_motion :
+(
+	eCoordonne, eMarcheArriereCoordonne, eDistance, eAngle, eCourbe 
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

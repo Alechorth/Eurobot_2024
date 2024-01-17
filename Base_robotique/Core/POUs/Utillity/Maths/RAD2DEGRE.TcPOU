@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="RAD2DEGRE" Id="{5756c9d0-4f43-4713-939f-ec4e279302a2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION RAD2DEGRE : lreal
+VAR_INPUT
+	lrAngle : LREAL;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[RAD2DEGRE := lrAngle*180/PI;]]></ST>
+    </Implementation>
+    <LineIds Name="RAD2DEGRE">
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

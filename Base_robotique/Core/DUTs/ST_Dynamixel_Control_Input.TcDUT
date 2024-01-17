@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_Dynamixel_Control_Input" Id="{54400625-cd78-432d-9873-edfb1df438a3}">
+    <Declaration><![CDATA[TYPE ST_Dynamixel_Control_Input :
+	STRUCT	
+		TypeAX : FB_DXL_AX12A;
+		TypeXL : FB_DXL_XL;
+		
+		bEnableTorque : BOOL;
+		bDisableTorque: BOOL;
+		
+		bLedOn : BOOL;
+		IbLedOff : BOOL;
+		
+		bOperatingMode : BOOL;
+		
+		bPosition : BOOL;
+		bStopPosition : BOOL;
+		bResetPosition : BOOL;
+		bAcceleration : BOOL;
+		bVelocity : BOOL;
+		
+		ParamOperatingMode_string : STRING;
+		ParamReset_BOOL : BOOL;
+		ParamPosition_DINT : DINT;
+		ParamSpeed_INT : INT;
+		ParamAcceleration_USINT : USINT;
+		
+		bGetLoad : BOOL;
+		bGetMovement : BOOL;
+		bGetPosition : BOOL;
+	END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

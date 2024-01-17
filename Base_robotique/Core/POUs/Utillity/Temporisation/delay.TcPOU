@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="delay" Id="{755ff08c-1583-4f14-bf33-0f1bb8dabb05}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION delay : bool
+VAR_INPUT
+	last_time : TIME;
+	tempo : TIME;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF TIME() - last_time >= tempo THEN 
+	delay := TRUE ;
+ELSE
+	delay := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="delay">
+      <LineId Id="7" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

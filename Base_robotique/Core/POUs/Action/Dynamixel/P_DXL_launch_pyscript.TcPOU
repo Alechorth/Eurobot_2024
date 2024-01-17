@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="P_DXL_launch_pyscript" Id="{398402ec-08e3-4d84-b0b7-8b67e879e1f7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM P_DXL_launch_pyscript
+VAR_INPUT 
+	bstart : BOOL;
+	bstop : BOOL;
+END_VAR
+VAR_OUTPUT
+	bActive : BOOL;
+END_VAR
+VAR
+	start_python		:NT_StartProcess;
+	get_AMSNETID		:FB_GetLocalAmsNetId;
+	sPath 				:STRING:= '/C Python Dev\DXL_LIB\';
+	sPython_script 		:STRING:= 'DXL_PYADS_PORT.py';
+	sAMSNETID 			:STRING;	
+	sLaunchCommandLine 	:STRING;
+	bBusy				:BOOL;
+	
+	bRestart_active : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//AMSnetID de l'automate
+get_AMSNETID(bExecute:=TRUE,AddrString=>sAMSNETID, bBusy=>bBusy);
+
+//ligne de commande dans le terminal pour lancer le script python
+sLaunchCommandLine := CONCAT(sPath, sPython_script);
+sLaunchCommandLine := CONCAT(sLaunchCommandLine, ' -a ');
+sLaunchCommandLine := CONCAT(sLaunchCommandLine, sAMSNETID);
+
+//lance une commande dans le terminal windows pour lancer le script python
+//la commande est lancée depuis C:\Windows\SysWOW64\
+IF NOT bBusy THEN
+	start_python(
+	NETID:= '',
+	PATHSTR:= 'C:\Windows\System32\cmd.exe',
+	DIRNAME:= '',
+	COMNDLINE:= sLaunchCommandLine,
+	START:= G_DXL.bRestart_py_script,
+	TMOUT := T#5S,
+	Busy=>,
+	ERR=> ,
+	ERRID=>); 
+END_IF
+
+
+IF bstart OR bRestart_active THEN 
+	// active le script python 1 fois (done_internal bloque la réactivation une fois qu'il a été effectué)
+	IF NOT G_DXL.bRestart_py_script AND NOT bRestart_active THEN
+		G_DXL.bRestart_py_script := TRUE;
+		bRestart_active := TRUE;
+	END_IF
+	
+	// désactive le script python si il était activé
+	IF G_DXL.bRestart_py_script AND NOT G_DXL.bPyscript_running AND NOT bRestart_active THEN
+		G_DXL.bRestart_py_script := FALSE;	
+	END_IF
+	
+	// libére la réactivation du script python lorsqu'il à redémarré
+	IF bRestart_active AND G_DXL.bPyscript_running THEN
+		bRestart_active := FALSE;
+	END_IF
+END_IF
+
+//arrête le script python
+IF bStop THEN 
+	G_DXL.bStop_python_script := TRUE;
+ELSE
+	G_DXL.bStop_python_script := FALSE;
+END_IF
+
+bActive := G_DXL.bPyscript_running;]]></ST>
+    </Implementation>
+    <LineIds Name="P_DXL_launch_pyscript">
+      <LineId Id="365" Count="40" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="406" Count="6" />
+      <LineId Id="335" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

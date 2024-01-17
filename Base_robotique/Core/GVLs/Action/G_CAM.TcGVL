@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <GVL Name="G_CAM" Id="{4c0d7563-136a-4855-8fc1-64098c956ddd}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+//author: Alec Horth
+
+// servent à la communication PYADS (! ne pas modifier)
+//seulement accessible au FB "FB_CAM"
+VAR_GLOBAL
+	//RUN variable => active les fonctionnalités de la caméra
+	//sinon les fonctions ne sont pas active pour economiser les ressources de la CPU (!! garde la dernière valeur)
+	RUN_STEREO			:BOOL; //mesure de proximité
+	RUN_ARUCO			:BOOL; //liste les ID des tags aruco présents dans le champ de vision de la caméra
+	
+	//retour de la caméra 
+	proximite			:USINT; //mesure de proximité de 0 à 3 
+							   //(0:champ de vision vide, 1:objet détecté, 2:object proche, 3:distance critique)
+	tag_aruco			:ARRAY[0..10] OF INT; //list les id des tags aruco présent 
+											  // max 10 tag détectés en même temps (défini par la longeur max de la liste)
+	taille_tag_aruco_cm :INT;
+	ID_tag_aruco		:INT;
+	
+	//fonctions du script python
+	STOP_PYSCRIPT		:BOOL; //arrête le script python
+	restart_py_script	:BOOL:= FALSE; //démarre le script python
+	bPyscript_running	:BOOL;		//le script python est actif
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

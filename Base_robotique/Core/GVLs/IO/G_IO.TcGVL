@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <GVL Name="G_IO" Id="{db1fb3b8-ab1f-46e3-97f0-35cfb5b014f7}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	// Variable en cas de panneau de commande sur le robot, sinon remplacer par des boutons visus.
+	bAU				AT%I*: BOOL;	// Bouton d'arrêt d'urgence, contact NC
+	bChoixCote		AT%I*: BOOL;	// Selecteur deux positions pour le choix du coté de départ (jaune=true, violet=false)
+	bInitRobot		AT%I*: BOOL;	// Bouton poussoir pour l'initialisation du robot, action et position
+	bCaptDepart		AT%I*: BOOL;	// Capteur inductif pour commencer un match
+	bReset			AT%I*: BOOL;	// Redémarre Twincat
+	
+	bLEDInit		AT%Q*: BOOL;	// LED robot initialisé, s'allume quand le robot est initialisé
+	bMoteurBalise	AT%Q*: BOOL;	// Moteur de la balise, fait tourner le rayon pour détecter les adversaires
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

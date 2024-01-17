@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="StartAction" Id="{78392568-e04f-442b-bc8a-ab460bb36abf}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION StartAction : bool
+VAR_INPUT
+	nom : STRING;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF G_Match.Tableau[G_Match.iLigne].TypeAction = nom AND G_Match.iAsyncAction = '' 
+OR G_Match.iAsyncAction = nom THEN
+	G_Match.iAsyncAction := nom;
+	StartAction := TRUE;
+ELSE
+	StartAction := FALSE;	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="StartAction">
+      <LineId Id="30" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="plusOuMoins" Id="{985b8a85-c5bf-4959-87a2-f54d0b76c8df}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION plusOuMoins : bool
+VAR_INPUT
+	val1  : LREAL;
+	val2  : LREAL;
+	plage : LREAL;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF val1 < val2 + plage AND val1 > val2 - plage THEN 
+	plusOuMoins := TRUE;
+ELSE
+	plusOuMoins := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="plusOuMoins">
+      <LineId Id="18" Count="3" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

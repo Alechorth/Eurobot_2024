@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Timeout" Id="{e880bfd7-d935-47b1-8a9e-1e474bbdb3b8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Timeout
+VAR_INPUT
+	match_time 	: TIME;
+	max_time	: TIME;
+END_VAR
+VAR_OUTPUT
+	bstop		: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//si le temps de match est dépassé, renvoie un signal d'arrêt 
+IF match_time >= max_time THEN 
+	bstop := TRUE;
+ELSE
+	bstop := FALSE;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Timeout">
+      <LineId Id="30" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

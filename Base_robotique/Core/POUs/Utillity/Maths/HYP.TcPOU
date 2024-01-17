@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="HYP" Id="{c1201563-527e-4793-9258-0d9f4500e7b3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HYP : lreal
+VAR_INPUT
+	X :LREAL;
+	Y :LREAL;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[HYP := sqrt(expt(X,2)+expt(Y,2));]]></ST>
+    </Implementation>
+    <LineIds Name="HYP">
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

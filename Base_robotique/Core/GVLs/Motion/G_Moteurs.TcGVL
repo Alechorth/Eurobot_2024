@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="G_Moteurs" Id="{087e72c9-5000-4856-92c0-a62ae4d600fd}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	axMoteurG		: AXIS_REF;			// Moteur gauche de la base roulante
+	axMoteurD		: AXIS_REF;			// Moteur droit de la base roulante
+	axEncodeurG		: AXIS_REF;			// Encodeur gauche de la base roulante, permet de savoir les déplacements sur la table
+	axEncodeurD		: AXIS_REF;			// Encodeur droit de la base roulante, permet de connaitre les déplacements sur la table
+	
+	mcPowerG		: MC_Power;			// Bloc MC_Power, alimente le moteur gauche de la base roulante 
+	mcPowerD		: MC_Power;			// Bloc MC_Power, alimente le moteur droite de la base roulante
+	
+	mcRelativeD		: MC_MoveRelative;	// Bloc move relative du moteur gauche, permet au robot de se déplacer en fonction de sa position
+	mcRelativeG		: MC_MoveRelative;	// Bloc move relative du moteur droit, permet au robot de se déplacer en fonction de sa position
+	
+	mcSuperPosD		: MC_MoveSuperImposed;
+	mcSuperPosG		: MC_MoveSuperImposed;
+										// Blocs d'arrêts (pause) des moteurs des roues de la base roulante
+	mcHaltDroite 	: MC_Halt;			//Arrêt moteur droit
+	mcHaltGauche 	: MC_Halt;			//Arrêt moteur gauche
+	
+	mcResetGau		: MC_Reset;			// Bloc de reset du moteur gauche de la base roulante
+	mcResetDro		: MC_Reset;			// Bloc qui réinitialise le moteur droit de la base roulante
+	
+	mcStopG			: MC_Stop;			// Bloc stop du moteur gauche, arrête le moteur gauche de la base roulante
+	mcStopD			: MC_Stop;			// Bloc stop du moteur droit, arrête le moteur droit de la base roulante
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

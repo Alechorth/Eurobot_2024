@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="G_Balise" Id="{ee65372f-6eec-428e-abe2-afe28b361b6e}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	Laser 				AT%I* 	: BOOL; 			//capteur optique de proximité (avec le mirroir)
+	Inductif 			AT%I* 	: BOOL; 			//capteur induction sous la balise	
+	
+	iNombreEnnemi 				: INT;				// nombre de fronts montants du laser, nombres d'ennemis détectés en un tour
+	ArrayEnnemi					: ARRAY [0..2,0..1] OF LREAL; 	// 	colonnes = ennemis 	[colonne, ligne]
+																//	ligne 0 = Angle 	[colonne, ligne]
+                                                        		// 	ligne 1 = Distance 	[colonne, ligne]
+	
+	bFront 						: BOOL;				//adversaire devant
+	bBack 						: BOOL;				//adversaire derrière
+	bLeft						: BOOL;				//adversaire à gauche
+	bRight						: BOOL;				//adversaire à droite
+	bProche						: BOOL;				//obstacle détecté proche
+	bClose 						: BOOL;				//obstacle détecté vraiment proche	
+	
+	lrDistance_1				: LREAL;			// Distance du premier ennemi détecté, est envoyée dans la visu balise
+	lrDistance_2				: LREAL;			// Distance du deuxième adversaire détecté, est envoyée dans la visu balise
+	lrDistance_3				: LREAL;			// Distance du troisième ennemi détecté, est envoyée dans la visu balise
+	lrAngle_1					: LREAL;			// Angle auquel le premier ennemi est détecté pour pouvoir le voir dans la visu balise
+	lrAngle_2					: LREAL;			// Angle de détection du deuxième adversaire, l'angle est envoyé dans la visu balise
+	lrAngle_3					: LREAL;			// Angle du troisième adversaire , permet de savoir la position de l'ennemi dans la visu balise
+
+	lrCoord_X1					: LREAL;			//coordonné X de l'enemi 1 selon le système de l'odométrie (activé avec la visu)
+	lrCoord_Y1					: LREAL;			//coordonné Y de l'enemi 1 selon le système de l'odométrie (activé avec la visu)
+	lrCoord_X2					: LREAL; 			//coordonné X de l'enemi 2 selon le système de l'odométrie (activé avec la visu)
+	lrCoord_Y2					: LREAL; 			//coordonné Y de l'enemi 2 selon le système de l'odométrie (activé avec la visu)
+	lrCoord_X3					: LREAL;			//coordonné X de l'enemi 3 selon le système de l'odométrie (activé avec la visu)
+	lrCoord_Y3					: LREAL;			//coordonné Y de l'enemi 3 selon le système de l'odométrie (activé avec la visu)
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

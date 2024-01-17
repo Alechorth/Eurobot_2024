@@ -1,0 +1,115 @@
+Id;Default
+386; Init Position
+863;%
+858;%10.0f
+354;%10.1f
+35;%t[m.ss]
+38;0°
+36;180°
+37;270°
+33;90°
+302;Accel.
+105;Accél.
+939;Accélération
+859;Actionneur
+823;Activation balise
+1171;activer mode test
+142;Angle
+42;Angle 1 : Nothing
+30;Angle 2 : %10.1f
+40;Angle 2 : Nothing
+1261;Angle 3 : %10.1f
+1278;Angle 3 : Nothing
+12;Angle d$'approche
+29;Angle1 : %10.1f
+34;Arrêt détection
+330;Atelier | Bureau
+629;Balise
+591;Barillet
+43;bloquage roue
+728;Bloquage Roue
+761;Burean  | Atelierprogression
+555;Bureau | Atelier
+451;Bureau | Python
+659;Chronomètre:
+948;Config
+145;Config Mode
+2;Config Moe
+45;Deccel.
+401;Deplacement
+41;Distance 1 : Nothing
+39;Distance 2 : Nothing
+1269;Distance 3 : Nothing
+28;Distance1 : %10.1f
+32;Distance2 : %10.1f
+1252;Distance3 : %10.1f
+368;Décél.
+1054;Décélération
+827;erreur
+653;Fin Match
+1287;GENTIL
+1004;Homologation
+402;INIT
+432;Init
+778;Init Barillet
+572;Init Bras
+660;Init Position
+458;Init progression
+261;Kimagure
+174;Led Bleu
+732;Led Rouge
+749;Led Vert
+573;Machibuse
+408;marche arrière
+463;Marche arrière
+932;Match 
+1113;Match en cours
+171;Menu
+0;Moteur power
+1244;Méchant
+44;Méchant 1
+160;Méchant 2
+86;Méchant 3
+657;Oikake
+731;Otoboke
+448;Panneau Commande
+617;Parcours 1
+580;Parcours 2
+619;Parcours 3
+182;Points
+68;Points :
+1030;Points :$;
+968;Pompe
+76;position
+544;Position X
+675;Position Y
+180;Position Z
+139;Prematch
+651;prêt pour start
+81;python
+424;Radio Button
+464;Reset
+47;reset pos
+691;Reset position
+58;Restart
+665;RETOUR
+567;Retour
+132;robot en 0
+678;roue bloqué
+87;Run
+595;réelle
+31;start
+214;Start
+658;Start$R$Nmatch
+228;Start Init
+813;Start Prematch
+789;Start python
+773;Stop python
+176;Teams
+638;Test
+848;Visu_Balise
+266;Visu_Deplacement
+365;Visu_Test
+924;Vitesse
+1073;X
+1018;Y

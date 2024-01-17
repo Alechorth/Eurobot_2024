@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="P_Connect_DXL" Id="{33f0ed0f-080e-40e8-9e5f-882a8f58ac5e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM P_Connect_DXL
+VAR_INPUT
+	iNombreAX : INT;
+	iNombreXL : INT;
+END_VAR
+VAR_IN_OUT
+	DXL_IN 	: ARRAY [1..ITAction.iNombreDynamixel] OF ST_Dynamixel_Control_Input;
+	DXL_OUT : ARRAY [1..ITAction.iNombreDynamixel] OF ST_Dynamixel_Control_Output;
+END_VAR
+VAR
+	icounter : INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FOR icounter := 1 TO ITAction.iNombreDynamixel DO
+	IF icounter <= iNombreXL THEN //Définition des moteurs XL430 et XL330
+		DXL_IN[icounter].TypeXL							(id:= icounter);
+		DXL_IN[icounter].TypeXL.send_enable_torque		(EN:=DXL_IN[icounter].bEnableTorque, 	done=> DXL_OUT[icounter].bEnableTorque);
+		DXL_IN[icounter].TypeXL.send_disable_torque		(EN:=DXL_IN[icounter].bDisableTorque, 	done=> DXL_OUT[icounter].bDisableTorque);
+		DXL_IN[icounter].TypeXL.send_led_on				(EN:=DXL_IN[icounter].bLedOn, 			done=> DXL_OUT[icounter].bLedOn);		
+		DXL_IN[icounter].TypeXL.send_led_off			(EN:=DXL_IN[icounter].IbLedOff, 		done=> DXL_OUT[icounter].bLedOff);
+		DXL_IN[icounter].TypeXL.send_operating_mode		(EN:=DXL_IN[icounter].bOperatingMode,	done=> DXL_OUT[icounter].bOperatingMode,mode:= DXL_IN[icounter].ParamOperatingMode_string);
+		DXL_IN[icounter].TypeXL.send_position			(EN:=DXL_IN[icounter].bPosition, 		done=> DXL_OUT[icounter].bPosition, position 	:= DXL_IN[icounter].ParamPosition_DINT, vitesse:= DXL_IN[icounter].ParamSpeed_INT);
+		DXL_IN[icounter].TypeXL.send_stop_position		(EN:=DXL_IN[icounter].bStopPosition, 	done=> DXL_OUT[icounter].bStopPosition,reset:= DXL_IN[icounter].ParamReset_BOOL);
+		DXL_IN[icounter].TypeXL.send_reset_position		(EN:=DXL_IN[icounter].bResetPosition, 	done=> DXL_OUT[icounter].bResetPosition);
+		DXL_IN[icounter].TypeXL.send_acceleration		(EN:=DXL_IN[icounter].bAcceleration,	done=> DXL_OUT[icounter].bAcceleration, acceleration:= DXL_IN[icounter].ParamAcceleration_USINT, speed:=DXL_IN[icounter].ParamSpeed_INT);
+		DXL_IN[icounter].TypeXL.send_velocity			(EN:=DXL_IN[icounter].bVelocity, 		done=> DXL_OUT[icounter].bVelocity, vitesse := DXL_IN[icounter].ParamSpeed_INT);
+	    DXL_IN[icounter].TypeXL.get_load				(EN:=DXL_IN[icounter].bGetLoad, 		load=> DXL_OUT[icounter].INFO_load_int);
+		DXL_IN[icounter].TypeXL.get_movement			(EN:=DXL_IN[icounter].bGetMovement, 	mouvement=> DXL_OUT[icounter].INFO_Mouvement_bool);
+		DXL_IN[icounter].TypeXL.get_position			(EN:=DXL_IN[icounter].bGetPosition,	position=> DXL_OUT[icounter].INFO_Position_dint);
+	ELSIF icounter > iNombreXL THEN //définition des moteurs AX-12A
+		DXL_IN[icounter].TypeAX							(id:= icounter);
+		DXL_IN[icounter].TypeAX.send_enable_torque		(EN:=DXL_IN[icounter].bEnableTorque, 	done=> DXL_OUT[icounter].bEnableTorque);
+		DXL_IN[icounter].TypeAX.send_disable_torque		(EN:=DXL_IN[icounter].bDisableTorque, 	done=> DXL_OUT[icounter].bDisableTorque);
+		DXL_IN[icounter].TypeAX.send_led_on				(EN:=DXL_IN[icounter].bLedOn, 			done=> DXL_OUT[icounter].bLedOn);		
+		DXL_IN[icounter].TypeAX.send_led_off			(EN:=DXL_IN[icounter].IbLedOff, 		done=> DXL_OUT[icounter].bLedOff);
+		DXL_IN[icounter].TypeAX.send_operating_mode		(EN:=DXL_IN[icounter].bOperatingMode,	done=> DXL_OUT[icounter].bOperatingMode, mode:=DXL_IN[icounter].ParamOperatingMode_string, );
+		DXL_IN[icounter].TypeAX.send_position			(EN:=DXL_IN[icounter].bPosition, 		done=> DXL_OUT[icounter].bPosition, position := DXL_IN[icounter].ParamPosition_DINT, vitesse:=DXL_IN[icounter].ParamSpeed_INT);
+		DXL_IN[icounter].TypeAX.send_stop_position		(EN:=DXL_IN[icounter].bStopPosition, 	done=> DXL_OUT[icounter].bStopPosition);
+		DXL_IN[icounter].TypeAX.send_velocity			(EN:=DXL_IN[icounter].bVelocity, 		done=> DXL_OUT[icounter].bVelocity, vitesse := DXL_IN[icounter].ParamSpeed_INT);
+		DXL_IN[icounter].TypeAX.get_load				(EN:=DXL_IN[icounter].bGetLoad, 		load=> DXL_OUT[icounter].INFO_load_int);
+		DXL_IN[icounter].TypeAX.get_movement			(EN:=DXL_IN[icounter].bGetMovement, 	mouvement=> DXL_OUT[icounter].INFO_Mouvement_bool);
+		DXL_IN[icounter].TypeAX.get_position			(EN:=DXL_IN[icounter].bGetPosition,	position=> DXL_OUT[icounter].INFO_Position_dint);
+	END_IF
+END_FOR   ]]></ST>
+    </Implementation>
+    <LineIds Name="P_Connect_DXL">
+      <LineId Id="17" Count="1" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="31" Count="4" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="50" Count="3" />
+      <LineId Id="55" Count="2" />
+      <LineId Id="59" Count="8" />
+      <LineId Id="70" Count="3" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

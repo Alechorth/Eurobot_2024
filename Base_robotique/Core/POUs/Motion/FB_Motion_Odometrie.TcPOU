@@ -1,0 +1,779 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Motion_Odometrie" Id="{4bca716c-d3fd-4391-95db-85e7b20a6000}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Motion_Odometrie
+VAR_INPUT
+	lrPosDepartatelierX 	:LREAL  ; 	// Position de départ côté atelier en X
+	lrPosDepartatelierY 	:LREAL  ; 	// Position de départ côté atelier en Y
+	lrAngleDepartatelier	:LREAL  ;	// Angle de départ côté atelier 
+	
+	lrPosDepartbureauX 		:LREAL  ; 	// Position de départ côté bureau en X
+	lrPosDepartbureauY 		:LREAL  ; 	// Position de départ côté bureau en Y
+	lrAngleDepartbureau		:LREAL  ;	// Angle de départ côté bureau
+	
+	lrEntraxeRoues			: LREAL ;	// Entraxe des roues du robot, à mesurer sur le robot
+	lrEntraxeRoueFolles		: LREAL	;	// Entraxe des roues folles du robot, à mesurer sur le robot
+END_VAR
+VAR_OUTPUT
+	bMotorPowered			: BOOL;
+	bMouvementDone			: BOOL;
+END_VAR
+VAR //odométrie
+ 	lrGPosT 				:LREAL; 			//position moteur gauche
+	lrDPosT 				:LREAL; 			//position moteur droit
+	lrGPosTm1 				:LREAL; 			//position moteur gauche au cycle précédent
+	lrDPosTm1 				:LREAL; 			//position moteur droit au cycle précédent
+	
+	lrGDelta 				:LREAL; 			//Différence de position du moteur gauche entre 2 cycles
+	lrDDelta 				:LREAL; 			//Différence de position du moteur droit entre 2 cycles
+	lrDelta 				:LREAL; 			//Différence de position au centre du robot entre 2 cycles
+	
+	lrPositionEncodeurG 	:LREAL; 			// Position de l'encodeur gauche avec facteur lorsqu'on tourne car la roue folle ne tourne pas à la même vitesse que la roue d'entraînement
+	lrPositionEncodeurD 	:LREAL; 			// Position de l'encodeur gauche avec facteur lorsqu'on tourne car la roue folle ne tourne pas à la même vitesse que la roue d'entraînement
+END_VAR
+VAR //pour M_move_curve
+	lrCurrentAngle			:LREAL;	
+	lrDepartX				:LREAL;
+	lrDepartY				:LREAL;
+	lrAxeRotationX			:LREAL;
+	lrAxeRotationY			:LREAL;
+	lrExpectedX 			:LREAL;				//Position finale théorique après une courbe - Alec 08.11.23
+	lrExpectedY				:LREAL;				//Position finale théorique après une courbe - Alec 08.11.23
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Axe X est à l'horizontal, l'axe Y est à la verticale, 0-360 degré est dans le sens anti-horaire (sens trigonométrique)
+
+lrGPosT := G_Moteurs.axEncodeurG.NcToPlc.ActPos; // Position Actuelle moteur gauche
+lrDPosT := G_Moteurs.axEncodeurD.NcToPlc.ActPos; // Position Actuelle moteur droit
+
+lrGDelta := lrGPosT - lrGPosTm1; // Différence de position du moteur gauche entre les cycles
+lrDDelta := lrDPosT - lrDPosTm1; // Différence de position du moteur droit entre les cycles
+
+lrDelta := (1.0/2.0)*(lrGDelta+lrDDelta); // Différence de distance au centre du robot
+
+// Calcul de l'angle :
+G_Odometrie.lrAngle := G_Odometrie.lrAngle + ((lrDDelta-lrGDelta) / lrEntraxeRoueFolles); // Angle = périmètre / diamètre
+
+IF G_Odometrie.lrAngle > (2*PI) THEN // Position absolue sur un tour pour l'angle
+	G_Odometrie.lrAngle := G_Odometrie.lrAngle - (2*PI); // Si on a tourné plus de 1 tour, on soustrait 360 degrés
+END_IF
+IF G_Odometrie.lrAngle < 0.0 THEN // Position absolue sur un tour pour l'angle
+	G_Odometrie.lrAngle := G_Odometrie.lrAngle + (2*PI); // Si on a tourné plus de 1 tour en négatif, on additionne 360 degrés
+END_IF
+
+G_Odometrie.lrPositionX := G_Odometrie.lrPositionX + (lrDelta * COS(G_Odometrie.lrAngle)); //Calcul de la position en X lorsqu'il se déplace en diagonal
+G_Odometrie.lrPositionY := G_Odometrie.lrPositionY + (lrDelta * SIN(G_Odometrie.lrAngle)); //Calcul de la position en Y lorsqu'il se déplace en diagonal
+
+lrGPosTm1 := lrGPosT; //Nouvelle position gauche sauvegardée pour le prochain cycle
+lrDPosTm1 := lrDPosT; //Nouvelle position droit sauvegardée pour le prochain cycle
+																//								360° (tour complet en deg)	 Angle en deg
+G_Odometrie.lrAngleDeg := G_Odometrie.lrAngle * 360 / (2*PI);   // Valeur de l'angle en degré : -------------------------- = ------------- (on peut simplifier par 2 le 360 et le 2*PI)
+																//								2*PI (tour complet en rad)	 Angle en rad										
+//OUTPUT
+bMotorPowered := G_Moteurs.mcPowerG.Busy and G_Moteurs.mcPowerD.Busy;
+bMouvementDone := G_Moteurs.mcRelativeD.Done AND G_Moteurs.mcRelativeG.Done;]]></ST>
+    </Implementation>
+    <Folder Name="Fonction" Id="{470b9202-d87f-4c02-aeb3-4ab765982d7a}" />
+    <Folder Name="Internal" Id="{ad5b1654-70d8-4e73-8929-31d7f5c998d2}" />
+    <Method Name="_M_ATAN2" Id="{c7dc5399-06ef-4aa4-94eb-747f17a9e667}" FolderPath="Internal\">
+      <Declaration><![CDATA[METHOD PRIVATE _M_ATAN2 : LREAL
+VAR_INPUT
+	X : LREAL; //côté opposé
+	Y : LREAL; //côté adjacent
+END_VAR
+VAR
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF X > 0.0 THEN			
+		_M_ATAN2 := ATAN(Y/X);		// Quand X est plus grand que 0, on divise Y par X
+ELSIF X < 0.0 THEN
+	IF Y >=0.0 THEN
+		_M_ATAN2 := ATAN(Y/X) + PI;	// Quand X est plus petit que 0, mais pas Y, on ajoute PI (180°) à l'angle calculé
+	ELSE
+		_M_ATAN2 := ATAN(Y/X) - PI;	// Quand X et Y sont plus petits que 0, on enlève PI (180°) à l'angle calculé
+	END_IF;
+	
+ELSIF Y > 0.0 THEN
+	_M_ATAN2 := PI*0.5;				// Si X est à 0 et Y est plus grand que 0, l'angle est de PI/2 (90°)
+ELSIF Y < 0.0 THEN
+    _M_ATAN2 := -PI*0.5;			// Si X est de 0 et Y est plus petit que 0, l'angle est de -PI/2 (-90°)
+ELSE
+   _M_ATAN2 := 0.0;					// Quand X et Y sont égals à 0, l'angle est de 0
+END_IF;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_M_coord2angle" Id="{3b29b435-6cc6-4d58-ba66-e81f02687bb6}" FolderPath="Internal\">
+      <Declaration><![CDATA[METHOD PRIVATE _M_coord2angle : LREAL
+VAR_INPUT
+	x 				:LREAL;	//position du robot voulu sur l'axe X
+	y 				:LREAL;	//position voulu du robot sur l'axe Y
+	bbackward		:BOOL := FALSE;  //déplacement avec l'arrière du robot 
+END_VAR
+VAR
+	lrangle_to_move :LREAL; // angle dont le robot va devoir tourner
+	lrmove_a 		:LREAL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Calcul de l'angle à parcourir avec de la trigonometrie (arctan(op/adj) = angle)
+lrangle_to_move := G_Odometrie.lrAngle - _M_ATAN2(		// La fonction ATAN2 sert à faire arctan en évitant les divisions par 0
+X := (x - G_Odometrie.lrPositionX), 
+Y := (y - G_Odometrie.lrPositionY)); //x,y pour atan2, le calcul est fait en radians
+	
+//si le robot dois aller en marche arrière la rotation est incrémentée de PI (180°) pour qu'elle soit juste 
+IF bbackward AND lrangle_to_move - PI < 0  THEN
+		lrangle_to_move := lrangle_to_move + PI;
+ELSIF bbackward AND lrangle_to_move - PI >= 0  THEN
+		lrangle_to_move := lrangle_to_move - PI;
+END_IF
+
+// Si l'angle à parcourir est plus petit que 0° ou plus grand que 2PI(360°), on lui ajoute/enlève 360° pour qu'il ne le soit plus
+IF lrangle_to_move < 0 THEN
+	lrangle_to_move := 2*PI + lrangle_to_move;
+ELSIF lrangle_to_move > 2*PI THEN
+	lrangle_to_move := lrangle_to_move - 2*PI;
+END_IF
+
+// Les distance que les roues doivenet parcourir pour faire la rotation demandée, sont envoyées au MC_MoveRelative
+IF lrangle_to_move = 0 THEN
+		lrmove_a := 0;
+		G_Moteurs.mcRelativeD.Distance := lrmove_a;
+		G_Moteurs.mcRelativeG.Distance := - lrmove_a;
+ELSIF lrangle_to_move < PI THEN		// On tourne dans le sens horaire 		//																		Angle [rad]						Angle[°]
+		lrmove_a := lrEntraxeRoues * (ABS(lrangle_to_move/2));	// Calclul de la distance avec le rayon et l'angle|Distance = Rayon* -----------------  (PI* Rayon*  ---------)
+		G_Moteurs.mcRelativeD.Distance := - lrmove_a;						//																			2							360
+		G_Moteurs.mcRelativeG.Distance :=   lrmove_a;
+ELSIF lrangle_to_move >= PI THEN		// On tourne dans le sens anti-horaire
+		lrmove_a := lrEntraxeRoues * (ABS((2*PI-lrangle_to_move)/2));
+		G_Moteurs.mcRelativeD.Distance :=   lrmove_a;
+		G_Moteurs.mcRelativeG.Distance := - lrmove_a;
+		
+END_IF
+_M_coord2angle := lrangle_to_move;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_M_coord2distance" Id="{324d1b4d-a688-4716-9425-dcc1145fd12e}" FolderPath="Internal\">
+      <Declaration><![CDATA[METHOD PRIVATE _M_coord2distance : LREAL
+VAR_INPUT
+	x 				:LREAL;
+	y 				:LREAL; 
+	bbackward		:BOOL := FALSE;  //déplacement avec l'arrière du robot 
+END_VAR
+VAR
+	lrdelta_distance 	:LREAL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Calcul de la distance à parcourir par pythagore (Racine carrée de (x au carré plus y au carré))
+lrdelta_distance := SQRT(		// SQRT = racine carrée
+	EXPT(ABS(x - G_Odometrie.lrPositionX),2) + EXPT(ABS(y - G_Odometrie.lrPositionY),2)); // EXPT = exponantielle (puissance), ABS = valeur absolue
+	
+//inversion de la valeur de distance du robot pour le faire rouler en marche arrière
+IF bbackward THEN
+	lrdelta_distance := -lrdelta_distance;
+END_IF
+
+// La distance à parcourir calculée, est envoyée aux MC_MoveRelative
+G_Moteurs.mcRelativeD.Distance := lrdelta_distance;
+G_Moteurs.mcRelativeG.Distance := lrdelta_distance;
+_M_coord2distance := lrdelta_distance;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="M_init_coordonne" Id="{64bef9c0-611a-4518-821c-a5bc8526fb8d}" FolderPath="Fonction\">
+      <Declaration><![CDATA[METHOD PUBLIC M_init_coordonne : BOOL
+VAR_INPUT
+	bChoixCote : BOOL; //True = atelier, FALSE = bureau
+END_VAR
+VAR_OUTPUT
+	bDone : bool;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bChoixCote THEN 	
+	G_Odometrie.lrAngle := lrAngleDepartAtelier ; //(5*PI)/4;  
+	G_Odometrie.lrPositionX := lrPosDepartAtelierX;
+	G_Odometrie.lrPositionY := lrPosDepartAtelierY;
+ELSE								
+	G_Odometrie.lrAngle := lrAngleDepartBureau; //(3*PI)/4; //Le robot est décalé de 180 degré pour avoir l'avant dans le sens de la table
+	G_Odometrie.lrPositionX := lrPosDepartBureauX ;
+	G_Odometrie.lrPositionY := lrPosDepartBureauY ;
+END_IF
+bDone := True;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="M_move_curve" Id="{35c95dd6-8673-4478-9ffb-482e52a81fac}" FolderPath="Fonction\">
+      <Declaration><![CDATA[METHOD PUBLIC M_move_curve : BOOL
+VAR_INPUT
+	lrRayon				:LREAL;	//positif => droite, negatif => gauche
+	lrAngle				:LREAL;	//positif => marche avant, negatif => marche arrière
+	lrSpeed				:LREAL;	// vitesse voulue du robot
+	bExecute			:BOOL;	//execution du function bloc
+END_VAR
+VAR_OUTPUT
+	bDone 				:BOOL;
+END_VAR
+
+VAR_INST
+	lrArcX 				:LREAL;
+	lrArcY				:LREAL;
+	lrVecteurDepart		:ARRAY [0..1] OF LREAL; //vecteur entre l'axe de rotation et le point de départ du robot
+	lrVecteurPosition	:ARRAY [0..1] OF LREAL; //vecteur entre l'axe de rotation et la position actuelle du robot
+	lrVecteurTrajectoire:ARRAY [0..1] OF LREAL; //vecteur de la positon théorique du robot en fonction de l'ange auxquel il se trouve
+	lrProduitVecteur	:LREAL;
+	lrSommeNormeVecteur	:LREAL;
+	lrDifferencePosition:LREAL;
+
+	
+	step 				:USINT; 
+	r_trig 				:R_TRIG;
+	lrCorrectionValue 	:LREAL := 0.1;	
+	bBackward 			:BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[r_trig(CLK := bExecute);
+bdone := FALSE;
+CASE step OF 
+	0:
+		IF r_trig.Q THEN
+			lrCurrentAngle := 0;
+			lrDepartX := G_Odometrie.lrPositionX;
+			lrDepartY := G_Odometrie.lrPositionY;
+			lrAxeRotationX := G_Odometrie.lrPositionX + lrRayon*COS(G_Odometrie.lrAngle - PI/2);
+			lrAxeRotationY := G_Odometrie.lrPositionY + lrRayon*SIN(G_Odometrie.lrAngle - PI/2);
+			lrVecteurDepart[0] := lrDepartX-lrAxeRotationX;
+			lrVecteurDepart[1] := lrDepartY-lrAxeRotationY;
+			step := step + 1;
+		END_IF
+	1:
+		IF NOT G_Moteurs.mcRelativeD.Execute AND NOT G_Moteurs.mcRelativeG.Execute THEN
+			IF lrAngle > 0 THEN
+				bBackward := FALSE;
+				IF lrRayon > 0 THEN 	//rotation vers la droite
+					G_Moteurs.mcRelativeD.Distance := DEGRE2RAD(lrAngle-lrCurrentAngle)*(lrRayon - lrEntraxeRoues/2);
+					G_Moteurs.mcRelativeG.Distance := DEGRE2RAD(lrAngle-lrCurrentAngle)*(lrRayon + lrEntraxeRoues/2);
+					G_Moteurs.mcRelativeD.velocity := (G_Moteurs.mcRelativeD.Distance/G_Moteurs.mcRelativeG.Distance) * lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+					G_Moteurs.mcRelativeG.Velocity := lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+					lrAngle := DEGRE2RAD(lrAngle);
+					lrExpectedX := lrAxeRotationX + lrVecteurDepart[0]*COS(lrAngle) + lrVecteurDepart[1]*SIN(lrAngle);
+					lrExpectedY := lrAxeRotationY -lrVecteurDepart[0]*SIN(lrAngle) + lrVecteurDepart[1]*COS(lrAngle);
+				ELSIF lrRayon < 0 THEN 	// rotation vers la gauche
+					lrArcX := lrRayon*(COS(DEGRE2RAD(lrAngle-lrCurrentAngle) - 1));
+					lrArcY := lrRayon*SIN(DEGRE2RAD(lrAngle-lrCurrentAngle));
+					//matrice rotation
+					lrExpectedX := lrArcX * COS(G_Odometrie.lrAngle - PI/2) - lrArcY * SIN(G_Odometrie.lrAngle - PI/2);
+					lrExpectedY := lrArcX * SIN(G_Odometrie.lrAngle - PI/2) + lrArcY * COS(G_Odometrie.lrAngle - PI/2);
+					lrExpectedX := G_Odometrie.lrPositionX + lrExpectedX;
+					lrExpectedY := G_Odometrie.lrPositionY + lrExpectedY;
+						
+					lrRayon := ABS(lrRayon);
+					G_Moteurs.mcRelativeD.Distance := DEGRE2RAD(lrAngle-lrCurrentAngle)*(lrRayon + lrEntraxeRoues/2);
+					G_Moteurs.mcRelativeG.Distance := DEGRE2RAD(lrAngle-lrCurrentAngle)*(lrRayon - lrEntraxeRoues/2);
+					G_Moteurs.mcRelativeG.Acceleration := (G_Moteurs.mcRelativeD.Distance/G_Moteurs.mcRelativeG.Distance)*2000;
+					G_Moteurs.mcRelativeD.Acceleration := 2000;
+					G_Moteurs.mcRelativeD.Deceleration := G_Moteurs.mcRelativeD.Acceleration;
+					G_Moteurs.mcRelativeG.Deceleration := G_Moteurs.mcRelativeG.Acceleration;
+					G_Moteurs.mcRelativeD.Velocity := lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+					G_Moteurs.mcRelativeG.velocity := (G_Moteurs.mcRelativeG.Distance/G_Moteurs.mcRelativeD.Distance) * lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+				END_IF	
+				
+			ELSIF lrAngle < 0 THEN
+				bBackward := TRUE;
+				lrAngle := ABS(lrAngle);
+				IF lrRayon > 0 THEN 	//rotation vers la droite
+					G_Moteurs.mcRelativeD.Distance := -(DEGRE2RAD(lrAngle-lrCurrentAngle)*(lrRayon - lrEntraxeRoues/2));
+					G_Moteurs.mcRelativeG.Distance := -(DEGRE2RAD(lrAngle-lrCurrentAngle)*(lrRayon + lrEntraxeRoues/2));
+					G_Moteurs.mcRelativeD.Acceleration := (G_Moteurs.mcRelativeD.Distance/G_Moteurs.mcRelativeG.Distance)*2000;
+					G_Moteurs.mcRelativeG.Acceleration := 2000;
+					G_Moteurs.mcRelativeD.Deceleration := G_Moteurs.mcRelativeD.Acceleration;
+					G_Moteurs.mcRelativeG.Deceleration := G_Moteurs.mcRelativeG.Acceleration;
+					G_Moteurs.mcRelativeD.velocity := (G_Moteurs.mcRelativeD.Distance/G_Moteurs.mcRelativeG.Distance) * lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+					G_Moteurs.mcRelativeG.Velocity := lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+					
+				ELSIF lrRayon < 0 THEN 	// rotation vers la gauche
+					lrRayon := ABS(lrRayon);
+					G_Moteurs.mcRelativeD.Distance := -(DEGRE2RAD(lrAngle-lrCurrentAngle)*(lrRayon + lrEntraxeRoues/2));
+					G_Moteurs.mcRelativeG.Distance := -(DEGRE2RAD(lrAngle-lrCurrentAngle)*(lrRayon - lrEntraxeRoues/2));
+					G_Moteurs.mcRelativeG.Acceleration := (G_Moteurs.mcRelativeD.Distance/G_Moteurs.mcRelativeG.Distance)*2000;
+					G_Moteurs.mcRelativeD.Acceleration := 2000;
+					G_Moteurs.mcRelativeD.Deceleration := G_Moteurs.mcRelativeD.Acceleration;
+					G_Moteurs.mcRelativeG.Deceleration := G_Moteurs.mcRelativeG.Acceleration;
+					G_Moteurs.mcRelativeD.Velocity := lrSpeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+					G_Moteurs.mcRelativeG.velocity := (G_Moteurs.mcRelativeG.Distance/G_Moteurs.mcRelativeD.Distance) * lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+				END_IF
+			END_IF
+	 	END_IF;
+		
+		G_Moteurs.mcRelativeD.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+		G_Moteurs.mcRelativeG.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+		
+		//position en temps réel 
+		IF NOT bBackward THEN 	//marche avant
+			IF lrRayon > 0 THEN //rotation vers la droite
+				//angle entre 2 vecteurs => théorème du produit de vecteur
+				lrVecteurPosition[0] := G_Odometrie.lrPositionX-lrAxeRotationX;
+				lrVecteurPosition[1] := G_Odometrie.lrPositionY-lrAxeRotationY;
+				
+				lrProduitVecteur := (lrVecteurPosition[0]*lrVecteurDepart[0])+(lrVecteurPosition[1]*lrVecteurDepart[1]);
+				lrSommeNormeVecteur := HYP(lrVecteurDepart[0],lrVecteurDepart[1]) * HYP(lrVecteurPosition[0],lrVecteurPosition[1])+1E-100;
+				lrCurrentAngle := ACOS(lrProduitVecteur/lrSommeNormeVecteur);
+								
+				lrVecteurTrajectoire[0] := lrAxeRotationX + lrVecteurDepart[0]*COS(lrCurrentAngle) + lrVecteurDepart[1]*SIN(lrCurrentAngle);
+				lrVecteurTrajectoire[1] := lrAxeRotationY - lrVecteurDepart[0]*SIN(lrCurrentAngle) + lrVecteurDepart[1]*COS(lrCurrentAngle);
+				lrDifferencePosition := HYP(lrVecteurTrajectoire[0]-G_Odometrie.lrPositionX,lrVecteurTrajectoire[1]-G_Odometrie.lrPositionY);
+
+				IF lrDifferencePosition > 5 AND NOT PlusOuMoins(lrCurrentAngle,lrAngle,PI/36)THEN
+					G_Moteurs.mcSuperPosG.Distance :=  lrCorrectionValue * lrDifferencePosition;
+					G_Moteurs.mcSuperPosD.Distance :=  0;
+					G_Moteurs.mcSuperPosG.Execute := TRUE;
+					G_Moteurs.mcSuperPosD.Execute := TRUE; 
+				END_IF
+				
+			ELSIF lrRayon < 0 THEN //rotation vers la gauche
+				pass();
+			END_IF
+		ELSE					//marche arrière 
+			IF lrRayon > 0 THEN //rotation vers la droite
+				pass();
+			ELSIF lrRayon < 0 THEN  // rotation vers la gauche
+				pass();
+			END_IF
+		END_IF
+		
+		IF G_Moteurs.mcSuperPosD.Done AND G_Moteurs.mcSuperPosG.Done THEN
+			G_Moteurs.mcSuperPosG.Execute := FALSE;
+			G_Moteurs.mcSuperPosD.Execute := FALSE; 
+		END_IF
+		
+		IF bMouvementDone THEN 
+			G_Moteurs.mcRelativeD.Execute := FALSE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Execute := FALSE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcSuperPosG.Execute := FALSE;
+			G_Moteurs.mcSuperPosD.Execute := FALSE; 
+			G_Moteurs.mcRelativeD.distance := 0;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.distance := 0;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Acceleration := 0;
+			G_Moteurs.mcRelativeD.Acceleration := 0;
+			G_Moteurs.mcRelativeD.Deceleration := 0;
+			G_Moteurs.mcRelativeG.Deceleration := 0;
+			step := 0;
+			bdone := TRUE;
+		END_IF
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="M_move_distance" Id="{fa2e5b3e-c992-4d8f-ac50-7446ce1b5db5}" FolderPath="Fonction\">
+      <Declaration><![CDATA[METHOD PUBLIC M_move_distance : BOOL
+VAR_INPUT 
+	lrDistance			:LREAL;	// angle désiré du robot en sens anti horaire (cercle trigo)
+	lrSpeed				:LREAL;	// vitesse voulue du robot
+	bExecute			:BOOL;	//execution du function bloc
+END_VAR
+VAR_OUTPUT
+	bDone 				:BOOL;
+END_VAR
+VAR_INST
+	step 				:USINT; 
+	r_trig 				: R_TRIG;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[r_trig(CLK := bExecute);
+bDone := FALSE;
+CASE step OF 
+	0:
+		IF r_trig.Q THEN
+			G_Moteurs.mcRelativeD.velocity := lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Velocity := lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			step := step + 1;
+		END_IF
+	1:
+		G_Moteurs.mcRelativeD.Distance := lrDistance;
+		G_Moteurs.mcRelativeG.Distance := lrDistance;
+		step := step + 1;
+	2:
+		G_Moteurs.mcRelativeD.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+		G_Moteurs.mcRelativeG.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+		IF bMouvementDone THEN 
+			G_Moteurs.mcRelativeD.Execute := FALSE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Execute := FALSE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeD.distance := 0;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.distance := 0;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			bDone := TRUE;
+			step := 0;
+		END_IF
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="M_move_rotation" Id="{715892ef-08fe-498d-a51b-f65f74a1ffdb}" FolderPath="Fonction\">
+      <Declaration><![CDATA[METHOD PUBLIC M_move_rotation : BOOL
+VAR_INPUT
+	lrAngle				:LREAL;	// angle désiré du robot en sens anti horaire (cercle trigo)
+	lrSpeed				:LREAL;	// vitesse voulue du robot
+	bExecute			:BOOL;	//execution du function bloc
+END_VAR
+VAR_OUTPUT
+	bDone 				:BOOL;
+END_VAR
+VAR_INST
+	step 				:USINT; 
+	r_trig 				: R_TRIG;
+	lrangle_to_move		:LREAL;	// angle dont le robot va devoir tourner
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// fonctionne en faisant plusieurs tours
+	// - premier tour:		Counter = 0		mise à 0 des distances à effectuer par les moteurs
+	// - deuxième tour:		Counter = 1		Mise en mouvement des moteurs pour la rotation
+	// - troisième tour:	Counter = 2		remise à 0 du FB et renvoi d'un "done"
+
+r_trig(CLK := bExecute);
+bdone := FALSE;
+CASE step OF 
+	0:
+		IF r_trig.Q THEN
+			G_Moteurs.mcRelativeD.velocity := lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Velocity := lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			step := step + 1;
+		END_IF
+	1:
+		lrangle_to_move := lrAngle - G_Odometrie.lrAngleDeg; // définition de l'angle à parcourir
+		IF PlusOuMoins(lrangle_to_move, 0.0, 0.2) THEN 
+			G_Moteurs.mcRelativeD.Distance := 0;
+			G_Moteurs.mcRelativeG.Distance := 0;
+		ELSIF lrAngle_to_move < 0 THEN
+			lrangle_to_move := ABS(lrangle_to_move);
+			IF lrangle_to_move <= 180 THEN
+				lrangle_to_move := DEGRE2RAD(lrangle_to_move);
+				G_Moteurs.mcRelativeD.Distance := -lrangle_to_move * lrEntraxeRoues / 2;
+				G_Moteurs.mcRelativeG.Distance := lrangle_to_move * lrEntraxeRoues / 2;
+			ELSIF lrangle_to_move > 180 THEN	//si l'angle est inférieur ou égal à 180, on tourne en sens anti-horaire						Angle[°]
+				lrangle_to_move := DEGRE2RAD(lrangle_to_move);
+				G_Moteurs.mcRelativeD.Distance := (2*PI - lrangle_to_move) * lrEntraxeRoues / 2;												//							  360
+				G_Moteurs.mcRelativeG.Distance := -(2*PI - lrangle_to_move) * lrEntraxeRoues / 2;
+			END_IF
+		ELSIF lrAngle_to_move > 0 THEN 
+			IF lrangle_to_move <= 180 THEN
+				lrangle_to_move := DEGRE2RAD(lrangle_to_move);
+				G_Moteurs.mcRelativeD.Distance := lrangle_to_move * lrEntraxeRoues / 2;
+				G_Moteurs.mcRelativeG.Distance := -lrangle_to_move * lrEntraxeRoues / 2;
+			ELSIF lrangle_to_move > 180 THEN	//si l'angle est inférieur ou égal à 180, on tourne en sens anti-horaire						Angle[°]
+				lrangle_to_move := DEGRE2RAD(lrangle_to_move);
+				G_Moteurs.mcRelativeD.Distance := -(2*PI - lrangle_to_move) * lrEntraxeRoues / 2;												//							  360
+				G_Moteurs.mcRelativeG.Distance := (2*PI - lrangle_to_move) * lrEntraxeRoues / 2;
+			END_IF	
+		END_IF
+		step := step + 1; 
+	2:
+		G_Moteurs.mcRelativeD.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+		G_Moteurs.mcRelativeG.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+		IF bMouvementDone THEN 
+			G_Moteurs.mcRelativeD.Execute := FALSE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Execute := FALSE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeD.distance := 0;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.distance := 0;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			bdone := TRUE;
+			step := 0;
+		END_IF
+END_CASE
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="M_move_to_coordonne" Id="{72d756aa-da37-4775-b1f7-2927ac3709ec}" FolderPath="Fonction\">
+      <Declaration><![CDATA[METHOD PUBLIC M_move_to_coordonne : BOOL
+VAR_INPUT	
+	x  					:LREAL; //position voulue du robot en X
+	y  					:LREAL; //position voulue du robot en Y
+	lrspeed 			:LREAL; //vitesse voulue du robot depuis parcours
+	bExecute 			:BOOL; 	//permet l'activation du function bloc
+	bbackward			:BOOL := FALSE;  //déplacement avec l'arrière du robot 
+END_VAR
+VAR_OUTPUT
+	bDone 				:BOOL;
+END_VAR
+VAR_INST
+	step 				:USINT;	
+	r_trig 				:R_TRIG;		//front montant pour marquer la fin d'un déplacement
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// fonctionne en faisant plusieurs tours
+	// - premier tour:		Counter = 0		mise à 0 des distances à effectuer par les moteurs
+	// - deuxième tour:		Counter = 1		rotation pour se tourner vers les coordonnées cibles (si nécessaire uniquement)
+	// - troisième tour:	Counter = 2		Déplacement vers les les coordonnées cibles
+	// - quatrième tour: 	Counter = 3		remise à 0 du FB et renvoi d'un "done"
+
+// Quand le bloc est activé, le robot fait une rotation puis un déplacement en fonction de sa position actuelle et de la position à atteindre	
+r_trig(clk := bexecute);
+bdone :=FALSE;
+CASE step OF
+	0:	//lance l'execution de la fonction
+		IF r_trig.q THEN 
+			step := step + 1;
+			// Réglage de la vitesse de rotation des moteurs
+			G_Moteurs.mcRelativeD.Velocity 	:= lrspeed;
+			G_Moteurs.mcRelativeG.Velocity	:= lrspeed;
+			G_Moteurs.mcRelativeG.Distance 	:= 0;
+			G_Moteurs.mcRelativeD.Distance 	:= 0;
+		END_IF
+	1:
+		// attribue les valeurs aux moteurs pour une éventuelle rotation
+
+		_M_coord2angle(x,y,bbackward);		
+	
+		// S'il n'y a aucune rotation à faire avant de faire un mouvement, le compteur est incrémenté
+		IF G_Moteurs.mcRelativeD.Distance = 0 AND G_Moteurs.mcRelativeG.Distance = 0 THEN
+			step := step + 1;
+		ELSE //Exécution des mouvements relatifs
+			G_Moteurs.mcRelativeD.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu	
+			
+			IF bMouvementDone THEN
+				G_Moteurs.mcRelativeD.Execute := FALSE;	//si pas de coodronnées attribuées aux moteurs, pas d'exécution du mouvement prévu
+				G_Moteurs.mcRelativeG.Execute := FALSE;	//si pas de coodronnées attribuées aux moteurs, pas d'exécution du mouvement prévu
+				G_Moteurs.mcRelativeG.Distance := 0;
+				G_Moteurs.mcRelativeD.Distance := 0;
+				step := step + 1;
+			END_IF;
+		END_IF
+	2:
+		// atribue les valeurs aux moteurs pour le déplacement
+		_M_coord2distance(x,y,bbackward);		
+		// S'il n'y a aucune rotation à faire avant de faire un mouvement, le compteur est incrémenté
+		IF G_Moteurs.mcRelativeD.Distance = 0 AND G_Moteurs.mcRelativeG.Distance = 0 THEN
+			step := step + 1;
+		ELSE //Exécution des mouvements relatifs
+			G_Moteurs.mcRelativeD.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu	
+			
+			IF bMouvementDone THEN
+			G_Moteurs.mcRelativeD.Execute := FALSE;	//si pas de coodronnées attribuées aux moteurs, pas d'exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Execute := FALSE;	//si pas de coodronnées attribuées aux moteurs, pas d'exécution du mouvement prévu
+			G_Moteurs.mcRelativeG.Distance := 0;
+			G_Moteurs.mcRelativeD.Distance := 0;
+			bdone := TRUE;
+			step := 0;
+			END_IF;
+		END_IF
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="M_reset_moteurs" Id="{8c30cfa1-5039-4f2e-8b02-ba53709c94bb}" FolderPath="Fonction\">
+      <Declaration><![CDATA[METHOD PUBLIC M_reset_moteurs : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[G_Moteurs.mcRelativeD.Execute := FALSE;
+G_Moteurs.mcRelativeG.Execute := FALSE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="M_set_acceleration" Id="{049b2b60-e6d8-4e5d-beec-b0e981450099}" FolderPath="Fonction\">
+      <Declaration><![CDATA[METHOD PUBLIC M_set_acceleration : BOOL
+VAR_INPUT
+	lrAcc 	: LREAL;
+	lrDecc 	: LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[G_Moteurs.mcRelativeD.Acceleration	:= lrAcc;
+G_Moteurs.mcRelativeG.Acceleration	:= lrAcc;
+G_Moteurs.mcRelativeD.Deceleration	:= lrDecc;
+G_Moteurs.mcRelativeG.Deceleration	:= lrDecc;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_Motion_Odometrie">
+      <LineId Id="240" Count="26" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="315" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie._M_ATAN2">
+      <LineId Id="33" Count="1" />
+      <LineId Id="36" Count="12" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie._M_coord2angle">
+      <LineId Id="15" Count="2" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="18" Count="19" />
+      <LineId Id="39" Count="7" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="57" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie._M_coord2distance">
+      <LineId Id="12" Count="10" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="30" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie.M_init_coordonne">
+      <LineId Id="7" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="9" Count="2" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="15" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie.M_move_curve">
+      <LineId Id="122" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="256" Count="1" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="519" Count="1" />
+      <LineId Id="523" Count="1" />
+      <LineId Id="571" Count="1" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="276" Count="1" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="279" Count="1" />
+      <LineId Id="608" Count="0" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="281" Count="1" />
+      <LineId Id="409" Count="5" />
+      <LineId Id="407" Count="1" />
+      <LineId Id="283" Count="2" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="313" Count="1" />
+      <LineId Id="286" Count="1" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="290" Count="2" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="315" Count="1" />
+      <LineId Id="293" Count="6" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="300" Count="1" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="169" Count="1" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="657" Count="0" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="611" Count="0" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="658" Count="0" />
+      <LineId Id="656" Count="0" />
+      <LineId Id="646" Count="0" />
+      <LineId Id="649" Count="0" />
+      <LineId Id="677" Count="0" />
+      <LineId Id="653" Count="0" />
+      <LineId Id="676" Count="0" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="643" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="474" Count="3" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="467" Count="0" />
+      <LineId Id="661" Count="0" />
+      <LineId Id="663" Count="0" />
+      <LineId Id="662" Count="0" />
+      <LineId Id="489" Count="0" />
+      <LineId Id="174" Count="1" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="659" Count="1" />
+      <LineId Id="178" Count="1" />
+      <LineId Id="338" Count="2" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="678" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="143" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie.M_move_distance">
+      <LineId Id="130" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="131" Count="7" />
+      <LineId Id="154" Count="1" />
+      <LineId Id="157" Count="9" />
+      <LineId Id="168" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie.M_move_rotation">
+      <LineId Id="22" Count="3" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="180" Count="1" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="268" Count="1" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="275" Count="7" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="283" Count="7" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="169" Count="1" />
+      <LineId Id="174" Count="1" />
+      <LineId Id="177" Count="2" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="123" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie.M_move_to_coordonne">
+      <LineId Id="339" Count="7" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="347" Count="6" />
+      <LineId Id="406" Count="1" />
+      <LineId Id="354" Count="2" />
+      <LineId Id="433" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="358" Count="12" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="373" Count="18" />
+      <LineId Id="112" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie.M_reset_moteurs">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Motion_Odometrie.M_set_acceleration">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

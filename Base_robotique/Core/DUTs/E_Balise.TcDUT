@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="E_Balise" Id="{9c65d5fc-9ed6-445b-8ba7-471e8f884c96}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE E_Balise :
+(
+	Angle, Distance
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

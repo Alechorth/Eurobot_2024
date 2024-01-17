@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <GVL Name="G_PreMatch" Id="{55673cf2-132b-446c-bcbc-57c6559a207b}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	bPrematchActive : BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
