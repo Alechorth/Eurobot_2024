@@ -72,8 +72,8 @@ lrDPosTm1 := lrDPosT; //Nouvelle position droit sauvegardée pour le prochain cy
 G_Odometrie.lrAngleDeg := G_Odometrie.lrAngle * 360 / (2*PI);   // Valeur de l'angle en degré : -------------------------- = ------------- (on peut simplifier par 2 le 360 et le 2*PI)
 																//								2*PI (tour complet en rad)	 Angle en rad										
 //OUTPUT
-bMotorPowered := G_Moteurs.mcPowerG.Busy and G_Moteurs.mcPowerD.Busy;
-bMouvementDone := G_Moteurs.mcRelativeD.Done AND G_Moteurs.mcRelativeG.Done;]]></ST>
+bMouvementDone := G_Moteurs.mcRelativeG.Done AND G_Moteurs.mcRelativeD.Done;
+bMotorPowered := G_Moteurs.mcPowerG.Busy and G_Moteurs.mcPowerD.Busy;]]></ST>
     </Implementation>
     <Folder Name="Fonction" Id="{470b9202-d87f-4c02-aeb3-4ab765982d7a}" />
     <Folder Name="Internal" Id="{ad5b1654-70d8-4e73-8929-31d7f5c998d2}" />
@@ -536,9 +536,10 @@ CASE step OF
 	2:
 		// atribue les valeurs aux moteurs pour le déplacement
 		_M_coord2distance(x,y,bbackward);		
-		// S'il n'y a aucune rotation à faire avant de faire un mouvement, le compteur est incrémenté
+		// S'il n'y a aucun déplacement à faire avant de faire un mouvement, le compteur est incrémenté
 		IF G_Moteurs.mcRelativeD.Distance = 0 AND G_Moteurs.mcRelativeG.Distance = 0 THEN
-			step := step + 1;
+			bdone := TRUE;
+			step := 0;
 		ELSE //Exécution des mouvements relatifs
 			G_Moteurs.mcRelativeD.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
 			G_Moteurs.mcRelativeG.Execute := TRUE;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu	
@@ -583,7 +584,8 @@ G_Moteurs.mcRelativeG.Deceleration	:= lrDecc;]]></ST>
       <LineId Id="240" Count="26" />
       <LineId Id="176" Count="0" />
       <LineId Id="318" Count="0" />
-      <LineId Id="315" Count="1" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="315" Count="0" />
     </LineIds>
     <LineIds Name="FB_Motion_Odometrie._M_ATAN2">
       <LineId Id="33" Count="1" />
@@ -762,7 +764,9 @@ G_Moteurs.mcRelativeG.Deceleration	:= lrDecc;]]></ST>
       <LineId Id="358" Count="12" />
       <LineId Id="405" Count="0" />
       <LineId Id="404" Count="0" />
-      <LineId Id="373" Count="18" />
+      <LineId Id="373" Count="5" />
+      <LineId Id="467" Count="0" />
+      <LineId Id="379" Count="12" />
       <LineId Id="112" Count="0" />
     </LineIds>
     <LineIds Name="FB_Motion_Odometrie.M_reset_moteurs">

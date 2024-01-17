@@ -120,6 +120,12 @@
     <Compile Include="POUs\Motion\ITMotion.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="POUs\Structure\Actions\F_DXL_Position.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Structure\Actions\F_DXL_Reset.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="POUs\Structure\Structure_MAIN.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -145,6 +151,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\Utillity\Structure\AddStep.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Utillity\Structure\EtapeEnCours.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Utillity\Structure\ReplaceStep.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\Utillity\Temporisation\delay.TcPOU">

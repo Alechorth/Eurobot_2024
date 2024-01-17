@@ -17,6 +17,8 @@ END_VAR
       <ST><![CDATA[(*
 EXPLICATIONS--------------------------------------------------------------------------------------------------------------------------------------------------
 iLigne := iLigne + 1;
+Tableau[iLigne].NomEtape			// Nom de l'étape en cours => permet de faire des saut dans le tableau pour cibler une action en particulier
+Tableau[iLigne].EtapeCible			// Nom de l'étape à laquelle on veut aller
 Tableau[iLigne].TypeTache			//Défini la tâche à effectuer durant cette ligne du tableau
 Tableau[iLigne].TypeDeplacement		//Défini le type de déplacement 
 Tableau[iLigne].TypeAction			//Défini l'action à effectuer
@@ -32,6 +34,8 @@ Tableau[iLigne].bArretDetection		//Désactive la détection de la balise
 
 TEMPLATE-------------------------------------------------------------------------------------------------------------------------------------------------------
 iLigne := iLigne + 1;
+Tableau[iLigne].NomEtape			:=		;
+Tableau[iLigne].EtapeCible			:= 		;
 Tableau[iLigne].TypeTache			:= 		;
 Tableau[iLigne].TypeDeplacement		:=		;
 Tableau[iLigne].TypeAction			:=		;
@@ -46,7 +50,7 @@ Tableau[iLigne].uiAjoutPoints_pts	:=		;
 Tableau[iLigne].bArretDetection		:=		;
 
 TypeTache--------------------------------------------------------------------------------------------------------------------------------------------------------
-eAttendre, eDeplacement, eAction, eActionDeplacementSimultane, eFinParcours
+eAttendre, eDeplacement, eAction, eActionDeplacementSimultane, eFinParcours, eChangementTache
 
 TypeDeplacement--------------------------------------------------------------------------------------------------------------------------------------------------
 eCoordonne, eMarcheArriereCoordonne, eDistance, eAngle, eCourbe 
@@ -56,57 +60,28 @@ IF bChoixCote THEN //atelier
 	iLigne := 1;
 	Tableau[iLigne].TypeTache			:= 	eDeplacement;	
 	Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
-	//Tableau[iLigne].TypeAction			:=	
 	Tableau[iLigne].lrPositionX_mm		:=	800;
 	Tableau[iLigne].lrPositionY_mm		:=	800;
-	//Tableau[iLigne].lrAngleVoulu_deg	:=
-	//Tableau[iLigne].lrDistanceVoulu_mm	:=
 	Tableau[iLigne].lrVitesse_mms		:=	500;
-	//Tableau[iLigne].tAttente_ms			:=
 	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
-	//Tableau[iLigne].bArretDetection		:=
-	
 	(*
 	iLigne := iLigne + 1;
-	Tableau[iLigne].TypeTache			:= 	eAction;	
-	//Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
-	Tableau[iLigne].TypeAction			:=	'Lampe 3s';
-	//Tableau[iLigne].lrPositionX_mm		:=	500;
-	//Tableau[iLigne].lrPositionY_mm		:=	500;
-	//Tableau[iLigne].lrAngleVoulu_deg	:=
-	//Tableau[iLigne].lrDistanceVoulu_mm	:=
-	//Tableau[iLigne].lrVitesse_mms		:=	100;
-	//Tableau[iLigne].tAttente_ms			:= 
-	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
-	//Tableau[iLigne].bArretDetection		:=
+	Tableau[iLigne].TypeTache			:= 	eChangementTache;	
+	Tableau[iLigne].EtapeCible			:= 'moteur';
 	*)
-	(*
-	iLigne := iLigne + 1;
-	Tableau[iLigne].TypeTache			:= 	eAction;	
-	//Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
-	Tableau[iLigne].TypeAction			:=	'Dynamixel position 0';
-	//Tableau[iLigne].lrPositionX_mm		:=	500;
-	//Tableau[iLigne].lrPositionY_mm		:=	500;
-	//Tableau[iLigne].lrAngleVoulu_deg	:=
-	//Tableau[iLigne].lrDistanceVoulu_mm	:=
-	//Tableau[iLigne].lrVitesse_mms		:=	100;
-	//Tableau[iLigne].tAttente_ms			:=
-	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
-	//Tableau[iLigne].bArretDetection		:=
-	*)
-	
 	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eDeplacement;	
 	Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
-	//Tableau[iLigne].TypeAction			:=	
-	Tableau[iLigne].lrPositionX_mm		:=	400;
-	Tableau[iLigne].lrPositionY_mm		:=	400;
-	//Tableau[iLigne].lrAngleVoulu_deg	:=
-	//Tableau[iLigne].lrDistanceVoulu_mm	:=
+	Tableau[iLigne].lrPositionX_mm		:=	200;
+	Tableau[iLigne].lrPositionY_mm		:=	200;
 	Tableau[iLigne].lrVitesse_mms		:=	500;
-	//Tableau[iLigne].tAttente_ms			:=
 	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
-	//Tableau[iLigne].bArretDetection		:=
+	
+	iLigne := iLigne + 1;
+	Tableau[iLigne].NomEtape			:= 'moteur';
+	Tableau[iLigne].TypeTache			:= 	eAction;	
+	Tableau[iLigne].TypeAction			:= 'Dynamixel reset';
+	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
 	
 	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eDeplacement;	
@@ -115,46 +90,8 @@ IF bChoixCote THEN //atelier
 	Tableau[iLigne].lrVitesse_mms		:=	speed;
 	Tableau[iLigne].uiAjoutPoints_pts	:= 	10;
 	
-	(*
-	iLigne := iLigne + 1;
-	Tableau[iLigne].TypeTache			:= 	eAttendre;	
-	//Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
-	//Tableau[iLigne].TypeAction			:=	'Dynamixel position 0';
-	//Tableau[iLigne].lrPositionX_mm		:=	500;
-	//Tableau[iLigne].lrPositionY_mm		:=	500;
-	//Tableau[iLigne].lrAngleVoulu_deg	:=
-	//Tableau[iLigne].lrDistanceVoulu_mm	:=
-	//Tableau[iLigne].lrVitesse_mms		:=	100;
-	Tableau[iLigne].tAttente_ms			:= T#1S;
-	//Tableau[iLigne].uiAjoutPoints_pts	:= 10;
-	//Tableau[iLigne].bArretDetection		:=
-	
-	iLigne := iLigne + 1;
-	Tableau[iLigne].TypeTache			:= 	eAction;	
-	//Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
-	Tableau[iLigne].TypeAction			:=	'Dynamixel position 4095';
-	//Tableau[iLigne].lrPositionX_mm		:=	500;
-	//Tableau[iLigne].lrPositionY_mm		:=	500;
-	//Tableau[iLigne].lrAngleVoulu_deg	:=
-	//Tableau[iLigne].lrDistanceVoulu_mm	:=
-	//Tableau[iLigne].lrVitesse_mms		:=	100;
-	//Tableau[iLigne].tAttente_ms			:=
-	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
-	//Tableau[iLigne].bArretDetection		:=
-	*)
-	
 	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eFinParcours;	
-	//Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
-	//Tableau[iLigne].TypeAction			:=	
-	//Tableau[iLigne].lrPositionX_mm		:=	500;
-	//Tableau[iLigne].lrPositionY_mm		:=	500;
-	//Tableau[iLigne].lrAngleVoulu_deg	:=
-	//Tableau[iLigne].lrDistanceVoulu_mm	:=
-	//Tableau[iLigne].lrVitesse_mms		:=	100;
-	//Tableau[iLigne].tAttente_ms			:=
-	//Tableau[iLigne].uiAjoutPoints_pts	:= 10;
-	//Tableau[iLigne].bArretDetection		:=
 ELSE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//bureau
 	iLigne := 1;
@@ -164,7 +101,12 @@ ELSE////////////////////////////////////////////////////////////////////////////
 	
 	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eAction;	
-	Tableau[iLigne].TypeAction			:= 'Lampe 3s';
+	Tableau[iLigne].TypeAction			:= 'Dynamixel position 0';
+	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
+	
+	iLigne := iLigne + 1;
+	Tableau[iLigne].TypeTache			:= 	eAction;	
+	Tableau[iLigne].TypeAction			:= 'Dynamixel position 4095';
 	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
 	
 	iLigne := iLigne + 1;
@@ -173,52 +115,19 @@ END_IF
 ]]></ST>
     </Implementation>
     <LineIds Name="P_Tableau_Strategie_2">
-      <LineId Id="33" Count="0" />
-      <LineId Id="76" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="20" Count="6" />
-      <LineId Id="317" Count="0" />
-      <LineId Id="27" Count="0" />
-      <LineId Id="29" Count="2" />
-      <LineId Id="75" Count="0" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="77" Count="7" />
-      <LineId Id="316" Count="0" />
-      <LineId Id="85" Count="2" />
-      <LineId Id="61" Count="0" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="93" Count="0" />
-      <LineId Id="92" Count="0" />
-      <LineId Id="89" Count="1" />
-      <LineId Id="88" Count="0" />
+      <LineId Id="461" Count="39" />
       <LineId Id="34" Count="0" />
       <LineId Id="213" Count="0" />
       <LineId Id="212" Count="0" />
-      <LineId Id="36" Count="0" />
-      <LineId Id="38" Count="9" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="171" Count="0" />
-      <LineId Id="434" Count="0" />
-      <LineId Id="127" Count="11" />
-      <LineId Id="145" Count="0" />
-      <LineId Id="424" Count="0" />
-      <LineId Id="146" Count="10" />
-      <LineId Id="144" Count="0" />
-      <LineId Id="191" Count="0" />
-      <LineId Id="425" Count="0" />
-      <LineId Id="192" Count="10" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="427" Count="0" />
-      <LineId Id="429" Count="4" />
-      <LineId Id="428" Count="0" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="426" Count="0" />
-      <LineId Id="174" Count="10" />
-      <LineId Id="172" Count="0" />
-      <LineId Id="158" Count="11" />
-      <LineId Id="157" Count="0" />
-      <LineId Id="125" Count="0" />
-      <LineId Id="108" Count="11" />
+      <LineId Id="501" Count="6" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="540" Count="1" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="508" Count="7" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="535" Count="1" />
+      <LineId Id="532" Count="2" />
+      <LineId Id="516" Count="8" />
       <LineId Id="107" Count="0" />
       <LineId Id="214" Count="0" />
       <LineId Id="217" Count="0" />
@@ -227,6 +136,9 @@ END_IF
       <LineId Id="383" Count="0" />
       <LineId Id="447" Count="2" />
       <LineId Id="446" Count="0" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="527" Count="2" />
+      <LineId Id="526" Count="0" />
       <LineId Id="380" Count="0" />
       <LineId Id="296" Count="1" />
       <LineId Id="216" Count="0" />

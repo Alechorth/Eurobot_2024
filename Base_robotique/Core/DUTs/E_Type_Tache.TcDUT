@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <DUT Name="E_Type_Tache" Id="{c955f85a-845c-473e-b66d-c83b67f58550}">
     <Declaration><![CDATA[TYPE E_Type_Tache :	// Appel des différentes tâches que le robot va faire
 (
-	eAttendre, eDeplacement, eAction, eFinParcours
+	eAttendre, eDeplacement, eAction, eFinParcours, eChangementTache
 );
 END_TYPE
 ]]></Declaration>

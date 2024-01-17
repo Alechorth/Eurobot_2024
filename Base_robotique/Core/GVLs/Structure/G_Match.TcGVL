@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <GVL Name="G_Match" Id="{60a8e4ef-30c4-40fc-80cf-b7b07ceed9bb}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL
@@ -12,6 +12,7 @@ VAR_GLOBAL
 	Tableau 			: ARRAY[0..100] OF ST_Tableau;
 	iLigne 				: INT;
 	NextLigne			: BOOL;
+	iCounter			: INT;
 	
 	bExecuteDeplacement : BOOL;
 	bDeplacementFini	: BOOL;

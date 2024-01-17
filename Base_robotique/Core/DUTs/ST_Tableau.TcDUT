@@ -1,8 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <DUT Name="ST_Tableau" Id="{4dd442a7-1dc4-434d-a7bf-4758fc40670a}">
     <Declaration><![CDATA[TYPE ST_Tableau : // Appel des variables qui permettent de faire les différentes tâches
 	STRUCT
+		NomEtape			: STRING(50);			// Nom de l'étape en cours => permet de faire des saut dans le tableau pour cibler une action en particulier
+		EtapeCible			: STRING(50); 			// Nom de l'étape à laquelle on veut aller
 		TypeTache			: E_Type_Tache;			// Permet la tâche qu'on va faire à la ligne du tableau
 		TypeDeplacement     : E_Type_motion;        // Permet de choisir le type de déplacement
 		TypeAction			: STRING(50);			// Choisi le type d'action
@@ -16,8 +18,6 @@
 		uiAjoutPoints_pts	: INT;					// Nombre de points que l'on veut ajouter sur le compteur
 		bArretDetection		: BOOL;					// Désactivation de la détection de la balise, le robot ne s'arrête plus quand il détecte un adversaire, sert à pouvoir démarrer si nos robots ont aussi des catadioptres
 	END_STRUCT
-END_TYPE
-
-//garder tache point ]]></Declaration>
+END_TYPE]]></Declaration>
   </DUT>
 </TcPlcObject>

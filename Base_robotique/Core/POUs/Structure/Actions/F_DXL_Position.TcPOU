@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_DXL_Position" Id="{faeb3d6f-655c-4b1d-a3a6-44d2f6d7f6bd}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_DXL_Position : bool
+VAR_INPUT
+	position:DINT;
+	speed	:INT;
+	ID		:INT;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE G_Match.iEtapeAction OF
+	0:
+		ITAction.DXLIN[ID].bPosition := TRUE;
+		ITAction.DXLIN[ID].ParamPosition_DINT := position;
+		ITAction.DXLIN[ID].ParamSpeed_INT := speed;
+		IF ITAction.DXLOUT[ID].bPosition THEN
+			ITAction.DXLIN[ID].bPosition := FALSE;
+			FinishAction(1,0);
+			Next();;
+		END_IF
+	1:
+		ITAction.DXLIN[ID].bGetPosition := TRUE;
+		IF PlusOuMoins(ITAction.DXLOUT[ID].INFO_Position_dint, 0, 15) THEN 
+			ITAction.DXLIN[ITAction.Template_XL].bGetPosition := FALSE;
+			FinishAction(0,1);
+		END_IF
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="F_DXL_Position">
+      <LineId Id="8" Count="15" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

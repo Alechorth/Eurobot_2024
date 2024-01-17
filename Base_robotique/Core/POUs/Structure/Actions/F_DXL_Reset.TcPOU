@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_DXL_Reset" Id="{b685473e-fc1e-4374-9d2b-b44864286662}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_DXL_Reset : bool
+VAR_INPUT
+	ID:INT;
+	offset:DINT;
+END_VAR
+VAR
+	baseTime:TIME;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE G_Match.iEtapeAction OF
+	0:
+		ITAction.DXLIN[ID].ParamPosition_DINT := 100000;
+		ITAction.DXLIN[ID].ParamSpeed_INT := 100;
+		
+		ITAction.DXLIN[ID].bPosition := TRUE;
+		IF ITAction.DXLOUT[ID].bPosition THEN
+			ITAction.DXLIN[ID].bPosition := FALSE;
+			baseTime := TIME();
+			Next();
+		END_IF
+	1:
+		IF delay(baseTime,T#1S)THEN
+			next();
+		END_IF;
+	2:
+		G_Visus.bMatchEnemi := TRUE;
+		ITAction.DXLIN[ID].bGetLoad := TRUE;
+		IF  G_IO.bCaptDepart OR ITAction.DXLOUT[ID].INFO_load_int >= 150 THEN
+			ITAction.DXLIN[ITAction.XLID2].bGetLoad := FALSE;
+			next();
+		END_IF
+	3:
+		G_Visus.bMatchEnemi := FALSE;
+		ITAction.DXLIN[ID].ParamReset_BOOL := TRUE;
+		ITAction.DXLIN[ID].bStopPosition := TRUE;
+		IF ITAction.DXLOUT[ID].bStopPosition THEN 
+			ITAction.DXLIN[ID].bStopPosition := FALSE;
+			next();
+		END_IF
+	4:
+		ITAction.DXLIN[ID].bPosition := TRUE;
+		ITAction.DXLIN[ID].ParamPosition_DINT := offset;
+		ITAction.DXLIN[ID].ParamSpeed_INT := 500;
+		IF ITAction.DXLOUT[ID].bPosition THEN
+			ITAction.DXLIN[ID].bPosition := FALSE;
+			FinishAction(0,0);
+		END_IF
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="F_DXL_Reset">
+      <LineId Id="8" Count="37" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
