@@ -156,6 +156,9 @@
     <Compile Include="POUs\Utillity\Structure\EtapeEnCours.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="POUs\Utillity\Structure\PointsRestants.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="POUs\Utillity\Structure\ReplaceStep.TcPOU">
       <SubType>Code</SubType>
     </Compile>

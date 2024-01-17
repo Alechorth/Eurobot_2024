@@ -418,6 +418,21 @@ END_VAR
                     <v n="OwningPageId">-1L</v>
                     <v n="Id">24L</v>
                   </o>
+                  <o t="CFCCommentElement">
+                    <o n="Text" t="CFCText">
+                      <v n="Bounds">"0, 0, 0, 0"</v>
+                      <n n="ElementGroupId" />
+                      <v n="Text">"Bobst Robot Team framework
+Alec 17.01.2024"</v>
+                      <v n="Modifiable">true</v>
+                      <v n="Id">643L</v>
+                    </o>
+                    <v n="PageArea">0</v>
+                    <v n="Bounds">"76, 5, 0, 0"</v>
+                    <n n="ElementGroupId" />
+                    <v n="OwningPageId">-1L</v>
+                    <v n="Id">642L</v>
+                  </o>
                   <o t="CFCInputElement">
                     <o n="Output" t="CFCOutputPin">
                       <v n="Bounds">"0, 0, 0, 0"</v>
@@ -2459,13 +2474,13 @@ END_VAR
                         <v n="Flags">68</v>
                       </o>
                       <o>
-                        <v n="X">96</v>
+                        <v n="X">94</v>
                         <v n="Y">47</v>
                         <v n="IsJoint">false</v>
                         <v n="Flags">9</v>
                       </o>
                       <o>
-                        <v n="X">96</v>
+                        <v n="X">94</v>
                         <v n="Y">58</v>
                         <v n="IsJoint">false</v>
                         <v n="Flags">3</v>
@@ -2528,6 +2543,7 @@ END_VAR
           <TypeList>
             <Type n="Boolean">System.Boolean</Type>
             <Type n="CFCBoxElement">{f5becf35-b1f3-4274-b411-81d4b63a1516}</Type>
+            <Type n="CFCCommentElement">{3487d131-7fd4-48ac-9e99-9e275c3b8ff8}</Type>
             <Type n="CFCConnection">{5ae2e111-ecff-4a21-b647-2d4da63f8db7}</Type>
             <Type n="CFCImplementationObject">{32d3375e-c010-41e2-9e43-b2fbf4f2b374}</Type>
             <Type n="CFCInputElement">{d51129f5-df27-4886-99d1-c564d2e2c1f6}</Type>

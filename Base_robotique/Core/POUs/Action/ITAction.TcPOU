@@ -144,7 +144,7 @@ END_VAR	]]></Declaration>
                       <v n="Id">1208L</v>
                     </o>
                     <v n="PageArea">3</v>
-                    <v n="Bounds">"7, 18, 0, 0"</v>
+                    <v n="Bounds">"7, 17, 0, 0"</v>
                     <n n="ElementGroupId" />
                     <v n="OwningPageId">-1L</v>
                     <v n="Id">1206L</v>
@@ -169,7 +169,7 @@ END_VAR	]]></Declaration>
                       <v n="Id">1205L</v>
                     </o>
                     <v n="PageArea">4</v>
-                    <v n="Bounds">"34, 18, 0, 0"</v>
+                    <v n="Bounds">"34, 17, 0, 0"</v>
                     <n n="ElementGroupId" />
                     <v n="OwningPageId">-1L</v>
                     <v n="Id">1203L</v>
@@ -717,7 +717,7 @@ END_VAR	]]></Declaration>
                     <v n="ConnectionId">1209L</v>
                     <o n="StartPoint" t="CFCPoint">
                       <v n="X">16</v>
-                      <v n="Y">18</v>
+                      <v n="Y">17</v>
                       <v n="IsJoint">false</v>
                       <v n="Flags">0</v>
                     </o>
@@ -729,13 +729,13 @@ END_VAR	]]></Declaration>
                     <l2 n="InnerList" cet="CFCPoint">
                       <o>
                         <v n="X">16</v>
-                        <v n="Y">18</v>
+                        <v n="Y">17</v>
                         <v n="IsJoint">false</v>
                         <v n="Flags">100</v>
                       </o>
                       <o>
                         <v n="X">33</v>
-                        <v n="Y">18</v>
+                        <v n="Y">17</v>
                         <v n="IsJoint">false</v>
                         <v n="Flags">97</v>
                       </o>
@@ -745,7 +745,7 @@ END_VAR	]]></Declaration>
               </o>
               <v n="AutoSizeCanvas">true</v>
               <v n="CanvasWidth">44</v>
-              <v n="CanvasHeight">20</v>
+              <v n="CanvasHeight">19</v>
             </o>
           </Data>
           <TypeList>

@@ -5,22 +5,28 @@
 VAR_GLOBAL
 	//Visu V_Config
 	bConfigEnable : BOOL;	
+	
+	//indicateurs
+	bConfigMoteurReady	: BOOL;
 	bConfigReady : BOOL;
+	bConfigMoveDone : BOOL;
+	
+	//Bouton 
 	bConfigStart : BOOL;
 	bConfigReset : BOOL;
 	bConfigBalise : BOOL;
 	bConfigMoteurPower : BOOL;
-	bConfigMoteurReady	: BOOL;
 	bConfigMarcheArriere : BOOL;
-	bConfigChoixCote : BOOL; //True = atelier, FALSE = bureau
-	bConfigMoveDone : BOOL;
+	bConfigChoixCote : BOOL; //True = atelier, FALSE = bureau	
 	
+	//consigne de position et vitesse
 	lrConfigPosX : LREAL;
 	lrConfigPosY : LREAL;
 	lrConfigVitesse : LREAL;
 	lrConfigAcc : LREAL;
 	lrConfigDecc : LREAL;
 	
+	//monitoring de la position
 	lrConfigErreurX : LREAL;
 	lrConfigErreurY : LREAL;
 	lrConfigErreurX_pourcent : LREAL;
@@ -42,6 +48,22 @@ VAR_GLOBAL
 	
 	//Visu V_Match
 	bMatchEnemi			: BOOL;
+	
+	//Visu V_Test
+	bTestEnable			: BOOL;
+	sTestFunction1		:STRING(50);
+	sTestFunction2		:STRING(50);
+	sTestFunction3		:STRING(50);
+	sTestFunction4		:STRING(50);
+	sTestFunction5		:STRING(50);
+	sTestFunction6		:STRING(50);
+	
+	sTestBouton1		:BOOL;
+	sTestBouton2		:BOOL;
+	sTestBouton3		:BOOL;
+	sTestBouton4		:BOOL;
+	sTestBouton5		:BOOL;
+	sTestBouton6		:BOOL;
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>

@@ -64,11 +64,11 @@ IF bChoixCote THEN //atelier
 	Tableau[iLigne].lrPositionY_mm		:=	800;
 	Tableau[iLigne].lrVitesse_mms		:=	500;
 	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
-	(*
+	
 	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eChangementTache;	
 	Tableau[iLigne].EtapeCible			:= 'moteur';
-	*)
+	
 	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eDeplacement;	
 	Tableau[iLigne].TypeDeplacement		:=	eCoordonne;

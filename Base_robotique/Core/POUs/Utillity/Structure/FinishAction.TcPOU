@@ -1,32 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="FinishAction" Id="{64a2e075-7474-4a98-af0d-323ec0420576}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION FinishAction 
 VAR_INPUT
 	StartAsync : BOOL := FALSE;
-	StopAsync : BOOL :=FALSE;
 END_VAR
 VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[IF StopAsync THEN 
+      <ST><![CDATA[G_Match.bActionFinie := TRUE; //arrête l'action sans arrêter la partie asynchrone
+IF NOT StartAsync THEN        //arrête l'action asynchrone
 	G_Match.iAsyncAction := ''; 
 	G_Match.iEtapeAction := 0;
-ELSE
-	G_Match.bActionFinie := TRUE;
-	IF NOT StartAsync THEN 
-		G_Match.iAsyncAction := ''; 
-		G_Match.iEtapeAction := 0;
-	END_IF
 END_IF
+
 
 ]]></ST>
     </Implementation>
     <LineIds Name="FinishAction">
-      <LineId Id="19" Count="1" />
-      <LineId Id="28" Count="0" />
-      <LineId Id="21" Count="0" />
       <LineId Id="25" Count="2" />
       <LineId Id="32" Count="0" />
       <LineId Id="22" Count="0" />

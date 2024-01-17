@@ -17,14 +17,14 @@ END_VAR
 		ITAction.DXLIN[ID].ParamSpeed_INT := speed;
 		IF ITAction.DXLOUT[ID].bPosition THEN
 			ITAction.DXLIN[ID].bPosition := FALSE;
-			FinishAction(1,0);
+			FinishAction(1);
 			Next();;
 		END_IF
 	1:
 		ITAction.DXLIN[ID].bGetPosition := TRUE;
 		IF PlusOuMoins(ITAction.DXLOUT[ID].INFO_Position_dint, 0, 15) THEN 
 			ITAction.DXLIN[ITAction.Template_XL].bGetPosition := FALSE;
-			FinishAction(0,1);
+			FinishAction(0);
 		END_IF
 END_CASE]]></ST>
     </Implementation>

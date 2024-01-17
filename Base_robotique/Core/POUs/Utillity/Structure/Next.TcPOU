@@ -8,9 +8,11 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[G_Match.iEtapeAction := G_Match.iEtapeAction + 1;]]></ST>
+      <ST><![CDATA[//passe à l'étape suivante des cases dans le _4_Action_active
+G_Match.iEtapeAction := G_Match.iEtapeAction + 1;]]></ST>
     </Implementation>
     <LineIds Name="Next">
+      <LineId Id="13" Count="0" />
       <LineId Id="7" Count="0" />
     </LineIds>
   </POU>

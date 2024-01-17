@@ -3,6 +3,7 @@ Id;Default
 863;%
 858;%10.0f
 354;%10.1f
+311;%s
 35;%t[m.ss]
 38;0°
 36;180°
@@ -11,6 +12,8 @@ Id;Default
 302;Accel.
 105;Accél.
 939;Accélération
+782;Action tes
+547;Action test
 859;Actionneur
 823;Activation balise
 1171;activer mode test
@@ -48,6 +51,7 @@ Id;Default
 827;erreur
 653;Fin Match
 1287;GENTIL
+102;G_Visus.sTestFunction2
 1004;Homologation
 402;INIT
 432;Init

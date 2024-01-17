@@ -66,12 +66,18 @@ IF bChoixCote THEN //atelier
 	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
 	
 	iLigne := iLigne + 1;
+	Tableau[iLigne].TypeTache			:= 	eAction;	
+	Tableau[iLigne].TypeAction			:= 'Dynamixel position 4095';
+	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
+	
+	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eDeplacement;	
 	Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
-	Tableau[iLigne].lrPositionX_mm		:=	400;
-	Tableau[iLigne].lrPositionY_mm		:=	400;
+	Tableau[iLigne].lrPositionX_mm		:=	10;
+	Tableau[iLigne].lrPositionY_mm		:=	10;
 	Tableau[iLigne].lrVitesse_mms		:=	500;
 	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
+
 	
 	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eDeplacement;	
@@ -136,10 +142,13 @@ END_IF
       <LineId Id="45" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="171" Count="0" />
+      <LineId Id="483" Count="2" />
+      <LineId Id="481" Count="1" />
       <LineId Id="192" Count="2" />
       <LineId Id="196" Count="1" />
       <LineId Id="200" Count="0" />
       <LineId Id="202" Count="0" />
+      <LineId Id="476" Count="0" />
       <LineId Id="427" Count="0" />
       <LineId Id="429" Count="4" />
       <LineId Id="428" Count="0" />
