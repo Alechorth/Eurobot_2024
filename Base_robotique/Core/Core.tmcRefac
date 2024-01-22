@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Refactors>
+  <Renames>
+    <RenamedSymbol>
+      <Type guid="c0b4fbc9-3e03-451c-a6ce-43d3188bd6f1">FB_MQTT_Subscriber</Type>
+      <From>iQueue</From>
+      <To>IiQueue</To>
+    </RenamedSymbol>
+    <RenamedType>
+      <Type guid="ab4607c3-7359-4374-ac2e-1220b1398f69">ITCOMMUNICATION</Type>
+      <From>ITCommunication</From>
+      <To>ITCommunication1</To>
+    </RenamedType>
+  </Renames>
+</Refactors>

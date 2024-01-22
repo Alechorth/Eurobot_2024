@@ -4,6 +4,7 @@
     <Declaration><![CDATA[PROGRAM Structure_MAIN
 VAR
 	baseTime:TIME; //tempo universel à utiliser n'importe où avec la fonction delay()
+	tempTableau:ST_Tableau;
 END_VAR
 VAR_INPUT
 	IbStartInit: BOOL;
@@ -24,17 +25,7 @@ VAR_OUTPUT
 	QbMatchEnCours:BOOL;
 	QbstartPyScript:BOOL;
 	QbEtapeEnCours:STRING(50);
-END_VAR
-//TO DO
-(*
-1. Créer la séquence d'init
-2. Gérer le choix de parcour dans le prématch
-3. Modifier les actions en fonctions du tableau
-4. Ajouter les tableaux
-5. Gérer le tiemout
-6. Gérer l'interrruption
-7. Gérer la séquence de fin de match
-*)]]></Declaration>
+END_VAR]]></Declaration>
     <Implementation>
       <SFC>
         <XmlArchive>
@@ -2038,7 +2029,7 @@ END_VAR
                                     <o>
                                       <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
                                       <o n="Value" t="StringValue">
-                                        <v n="Value">"T_finMatch"</v>
+                                        <v n="Value">"T_finMatchNormal"</v>
                                         <v n="DefaultValue">""</v>
                                       </o>
                                       <v n="Id">501L</v>
@@ -2500,261 +2491,19 @@ END_VAR
                                   <v n="Id">465L</v>
                                   <v n="IdParent">431L</v>
                                 </o>
-                                <o t="SFCBranch">
-                                  <o n="ElementList" t="SFCElementList">
-                                    <l2 n="InnerList" cet="SFCSegment">
-                                      <o>
-                                        <o n="ElementList" t="SFCElementList">
-                                          <l2 n="InnerList" cet="SFCTransition">
-                                            <o>
-                                              <v n="VariableName">"Branch1_0__Interruption__to__Match"</v>
-                                              <n n="EmbeddedTransition" />
-                                              <l2 n="EmbeddedTransitionProperties" />
-                                              <l2 n="Attributes" cet="SFCAttribute">
-                                                <o>
-                                                  <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
-                                                  <o n="Value" t="StringValue">
-                                                    <v n="Value">"T_Safe"</v>
-                                                    <v n="DefaultValue">""</v>
-                                                  </o>
-                                                  <v n="Id">478L</v>
-                                                  <v n="IdParent">477L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{7d894980-aeea-405c-a0f6-e2b26429c58f}</v>
-                                                  <o n="Value" t="StringValue">
-                                                    <v n="Value">""</v>
-                                                    <v n="DefaultValue">""</v>
-                                                  </o>
-                                                  <v n="Id">479L</v>
-                                                  <v n="IdParent">477L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{01580b27-6378-448b-8ecb-0e4b795b58d6}</v>
-                                                  <o n="Value" t="BoolValue">
-                                                    <v n="Value">"FALSE"</v>
-                                                    <v n="DefaultValue">"FALSE"</v>
-                                                  </o>
-                                                  <v n="Id">480L</v>
-                                                  <v n="IdParent">477L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{bc882c11-1e91-4dd8-a6b8-2075724ed18b}</v>
-                                                  <o n="Value" t="EnumValue">
-                                                    <v n="TemplateGuid">{79a4fdd5-c859-4de4-aa8d-c03372c880c2}</v>
-                                                    <n n="BaseType" />
-                                                    <v n="Value">"0"</v>
-                                                    <v n="DefaultValue">"0"</v>
-                                                  </o>
-                                                  <v n="Id">481L</v>
-                                                  <v n="IdParent">477L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{62e1754b-7629-4e63-9cec-10ae0c536f1f}</v>
-                                                  <o n="Value" t="BoolValue">
-                                                    <v n="Value">"FALSE"</v>
-                                                    <v n="DefaultValue">"FALSE"</v>
-                                                  </o>
-                                                  <v n="Id">482L</v>
-                                                  <v n="IdParent">477L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{8294df19-5962-4dee-a874-1051dabb0e3e}</v>
-                                                  <o n="Value" t="EnumValue">
-                                                    <v n="TemplateGuid">{6ecff51c-9b8f-4338-aab0-67c2b31b07e9}</v>
-                                                    <n n="BaseType" />
-                                                    <v n="Value">"0"</v>
-                                                    <v n="DefaultValue">"0"</v>
-                                                  </o>
-                                                  <v n="Id">483L</v>
-                                                  <v n="IdParent">477L</v>
-                                                </o>
-                                              </l2>
-                                              <v n="Id">477L</v>
-                                              <v n="IdParent">808L</v>
-                                            </o>
-                                          </l2>
-                                        </o>
-                                        <l2 n="Attributes" cet="SFCAttribute">
-                                          <o>
-                                            <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
-                                            <o n="Value" t="StringValue">
-                                              <v n="Value">""</v>
-                                              <v n="DefaultValue">""</v>
-                                            </o>
-                                            <v n="Id">809L</v>
-                                            <v n="IdParent">808L</v>
-                                          </o>
-                                          <o>
-                                            <v n="AttributeId">{7d894980-aeea-405c-a0f6-e2b26429c58f}</v>
-                                            <o n="Value" t="StringValue">
-                                              <v n="Value">""</v>
-                                              <v n="DefaultValue">""</v>
-                                            </o>
-                                            <v n="Id">810L</v>
-                                            <v n="IdParent">808L</v>
-                                          </o>
-                                          <o>
-                                            <v n="AttributeId">{01580b27-6378-448b-8ecb-0e4b795b58d6}</v>
-                                            <o n="Value" t="BoolValue">
-                                              <v n="Value">"FALSE"</v>
-                                              <v n="DefaultValue">"FALSE"</v>
-                                            </o>
-                                            <v n="Id">811L</v>
-                                            <v n="IdParent">808L</v>
-                                          </o>
-                                        </l2>
-                                        <v n="Id">808L</v>
-                                        <v n="IdParent">803L</v>
-                                      </o>
-                                      <o>
-                                        <o n="ElementList" t="SFCElementList">
-                                          <l2 n="InnerList">
-                                            <o t="SFCTransition">
-                                              <v n="VariableName">"Branch1_1__Interruption__to__Timeout"</v>
-                                              <n n="EmbeddedTransition" />
-                                              <l2 n="EmbeddedTransitionProperties" />
-                                              <l2 n="Attributes" cet="SFCAttribute">
-                                                <o>
-                                                  <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
-                                                  <o n="Value" t="StringValue">
-                                                    <v n="Value">"T_Timeout"</v>
-                                                    <v n="DefaultValue">""</v>
-                                                  </o>
-                                                  <v n="Id">817L</v>
-                                                  <v n="IdParent">816L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{7d894980-aeea-405c-a0f6-e2b26429c58f}</v>
-                                                  <o n="Value" t="StringValue">
-                                                    <v n="Value">""</v>
-                                                    <v n="DefaultValue">""</v>
-                                                  </o>
-                                                  <v n="Id">818L</v>
-                                                  <v n="IdParent">816L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{01580b27-6378-448b-8ecb-0e4b795b58d6}</v>
-                                                  <o n="Value" t="BoolValue">
-                                                    <v n="Value">"FALSE"</v>
-                                                    <v n="DefaultValue">"FALSE"</v>
-                                                  </o>
-                                                  <v n="Id">819L</v>
-                                                  <v n="IdParent">816L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{bc882c11-1e91-4dd8-a6b8-2075724ed18b}</v>
-                                                  <o n="Value" t="EnumValue">
-                                                    <v n="TemplateGuid">{79a4fdd5-c859-4de4-aa8d-c03372c880c2}</v>
-                                                    <n n="BaseType" />
-                                                    <v n="Value">"0"</v>
-                                                    <v n="DefaultValue">"0"</v>
-                                                  </o>
-                                                  <v n="Id">820L</v>
-                                                  <v n="IdParent">816L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{62e1754b-7629-4e63-9cec-10ae0c536f1f}</v>
-                                                  <o n="Value" t="BoolValue">
-                                                    <v n="Value">"FALSE"</v>
-                                                    <v n="DefaultValue">"FALSE"</v>
-                                                  </o>
-                                                  <v n="Id">821L</v>
-                                                  <v n="IdParent">816L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{8294df19-5962-4dee-a874-1051dabb0e3e}</v>
-                                                  <o n="Value" t="EnumValue">
-                                                    <v n="TemplateGuid">{6ecff51c-9b8f-4338-aab0-67c2b31b07e9}</v>
-                                                    <n n="BaseType" />
-                                                    <v n="Value">"0"</v>
-                                                    <v n="DefaultValue">"0"</v>
-                                                  </o>
-                                                  <v n="Id">822L</v>
-                                                  <v n="IdParent">816L</v>
-                                                </o>
-                                              </l2>
-                                              <v n="Id">816L</v>
-                                              <v n="IdParent">812L</v>
-                                            </o>
-                                            <o t="SFCJump">
-                                              <l2 n="Attributes" cet="SFCAttribute">
-                                                <o>
-                                                  <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
-                                                  <o n="Value" t="StringValue">
-                                                    <v n="Value">"Timeout"</v>
-                                                    <v n="DefaultValue">""</v>
-                                                  </o>
-                                                  <v n="Id">843L</v>
-                                                  <v n="IdParent">842L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{7d894980-aeea-405c-a0f6-e2b26429c58f}</v>
-                                                  <o n="Value" t="StringValue">
-                                                    <v n="Value">""</v>
-                                                    <v n="DefaultValue">""</v>
-                                                  </o>
-                                                  <v n="Id">844L</v>
-                                                  <v n="IdParent">842L</v>
-                                                </o>
-                                                <o>
-                                                  <v n="AttributeId">{01580b27-6378-448b-8ecb-0e4b795b58d6}</v>
-                                                  <o n="Value" t="BoolValue">
-                                                    <v n="Value">"FALSE"</v>
-                                                    <v n="DefaultValue">"FALSE"</v>
-                                                  </o>
-                                                  <v n="Id">845L</v>
-                                                  <v n="IdParent">842L</v>
-                                                </o>
-                                              </l2>
-                                              <v n="Id">842L</v>
-                                              <v n="IdParent">812L</v>
-                                            </o>
-                                          </l2>
-                                        </o>
-                                        <l2 n="Attributes" cet="SFCAttribute">
-                                          <o>
-                                            <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
-                                            <o n="Value" t="StringValue">
-                                              <v n="Value">""</v>
-                                              <v n="DefaultValue">""</v>
-                                            </o>
-                                            <v n="Id">813L</v>
-                                            <v n="IdParent">812L</v>
-                                          </o>
-                                          <o>
-                                            <v n="AttributeId">{7d894980-aeea-405c-a0f6-e2b26429c58f}</v>
-                                            <o n="Value" t="StringValue">
-                                              <v n="Value">""</v>
-                                              <v n="DefaultValue">""</v>
-                                            </o>
-                                            <v n="Id">814L</v>
-                                            <v n="IdParent">812L</v>
-                                          </o>
-                                          <o>
-                                            <v n="AttributeId">{01580b27-6378-448b-8ecb-0e4b795b58d6}</v>
-                                            <o n="Value" t="BoolValue">
-                                              <v n="Value">"FALSE"</v>
-                                              <v n="DefaultValue">"FALSE"</v>
-                                            </o>
-                                            <v n="Id">815L</v>
-                                            <v n="IdParent">812L</v>
-                                          </o>
-                                        </l2>
-                                        <v n="Id">812L</v>
-                                        <v n="IdParent">803L</v>
-                                      </o>
-                                    </l2>
-                                  </o>
+                                <o t="SFCTransition">
+                                  <v n="VariableName">"Interruption__to__Match"</v>
+                                  <n n="EmbeddedTransition" />
+                                  <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
                                     <o>
                                       <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
                                       <o n="Value" t="StringValue">
-                                        <v n="Value">"Branch3"</v>
+                                        <v n="Value">"T_RetourMatch"</v>
                                         <v n="DefaultValue">""</v>
                                       </o>
-                                      <v n="Id">804L</v>
-                                      <v n="IdParent">803L</v>
+                                      <v n="Id">478L</v>
+                                      <v n="IdParent">477L</v>
                                     </o>
                                     <o>
                                       <v n="AttributeId">{7d894980-aeea-405c-a0f6-e2b26429c58f}</v>
@@ -2762,8 +2511,8 @@ END_VAR
                                         <v n="Value">""</v>
                                         <v n="DefaultValue">""</v>
                                       </o>
-                                      <v n="Id">805L</v>
-                                      <v n="IdParent">803L</v>
+                                      <v n="Id">479L</v>
+                                      <v n="IdParent">477L</v>
                                     </o>
                                     <o>
                                       <v n="AttributeId">{01580b27-6378-448b-8ecb-0e4b795b58d6}</v>
@@ -2771,20 +2520,42 @@ END_VAR
                                         <v n="Value">"FALSE"</v>
                                         <v n="DefaultValue">"FALSE"</v>
                                       </o>
-                                      <v n="Id">806L</v>
-                                      <v n="IdParent">803L</v>
+                                      <v n="Id">480L</v>
+                                      <v n="IdParent">477L</v>
                                     </o>
                                     <o>
-                                      <v n="AttributeId">{23bdaa98-72ec-41f7-817b-9dede5697086}</v>
+                                      <v n="AttributeId">{bc882c11-1e91-4dd8-a6b8-2075724ed18b}</v>
+                                      <o n="Value" t="EnumValue">
+                                        <v n="TemplateGuid">{79a4fdd5-c859-4de4-aa8d-c03372c880c2}</v>
+                                        <n n="BaseType" />
+                                        <v n="Value">"0"</v>
+                                        <v n="DefaultValue">"0"</v>
+                                      </o>
+                                      <v n="Id">481L</v>
+                                      <v n="IdParent">477L</v>
+                                    </o>
+                                    <o>
+                                      <v n="AttributeId">{62e1754b-7629-4e63-9cec-10ae0c536f1f}</v>
                                       <o n="Value" t="BoolValue">
                                         <v n="Value">"FALSE"</v>
                                         <v n="DefaultValue">"FALSE"</v>
                                       </o>
-                                      <v n="Id">807L</v>
-                                      <v n="IdParent">803L</v>
+                                      <v n="Id">482L</v>
+                                      <v n="IdParent">477L</v>
+                                    </o>
+                                    <o>
+                                      <v n="AttributeId">{8294df19-5962-4dee-a874-1051dabb0e3e}</v>
+                                      <o n="Value" t="EnumValue">
+                                        <v n="TemplateGuid">{6ecff51c-9b8f-4338-aab0-67c2b31b07e9}</v>
+                                        <n n="BaseType" />
+                                        <v n="Value">"0"</v>
+                                        <v n="DefaultValue">"0"</v>
+                                      </o>
+                                      <v n="Id">483L</v>
+                                      <v n="IdParent">477L</v>
                                     </o>
                                   </l2>
-                                  <v n="Id">803L</v>
+                                  <v n="Id">477L</v>
                                   <v n="IdParent">431L</v>
                                 </o>
                                 <o t="SFCJump">
@@ -3041,14 +2812,14 @@ END_VAR
                                   <v n="IdParent">638L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <v n="VariableName">"Timeout__to__EndMatch"</v>
+                                  <v n="VariableName">"Timeout__to__Match"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
                                     <o>
                                       <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
                                       <o n="Value" t="StringValue">
-                                        <v n="Value">"T_NoTime"</v>
+                                        <v n="Value">"G_Match.RetourEnCours"</v>
                                         <v n="DefaultValue">""</v>
                                       </o>
                                       <v n="Id">1137L</v>
@@ -3112,7 +2883,7 @@ END_VAR
                                     <o>
                                       <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
                                       <o n="Value" t="StringValue">
-                                        <v n="Value">"EndMatch"</v>
+                                        <v n="Value">"Match"</v>
                                         <v n="DefaultValue">""</v>
                                       </o>
                                       <v n="Id">1163L</v>
@@ -3185,7 +2956,7 @@ END_VAR
                                     <o>
                                       <v n="AttributeId">{38391c6d-6d4a-42f8-8ee7-9f45e5adafa8}</v>
                                       <o n="Value" t="StringValue">
-                                        <v n="Value">"IbEndMatch"</v>
+                                        <v n="Value">"T_ArreteTout"</v>
                                         <v n="DefaultValue">""</v>
                                       </o>
                                       <v n="Id">1309L</v>
@@ -3822,7 +3593,7 @@ CASE G_Match.Tableau[G_Match.iLigne].TypeTache OF
 			G_Match.NextLigne := TRUE;
 		END_IF
 		
-	//Change la ligne du Tableau-------------------------------------------------------------------------------------------------------------
+	//Changement de la ligne du Tableau----------------------------------------------------------------------------------------------------------
 	eChangementTache:
 		FOR G_Match.iCounter := 1 TO 100 DO
 			IF G_Match.Tableau[G_Match.iCounter].NomEtape = G_Match.Tableau[G_Match.iLigne].EtapeCible THEN
@@ -3832,7 +3603,7 @@ CASE G_Match.Tableau[G_Match.iLigne].TypeTache OF
 		END_FOR
 		G_Match.NextLigne := TRUE;
 	
-	//Action du robot => se gère dans _4_Action_active-------------------------------------------------------------------------------------
+	//Action du robot => se gère dans _4_Action_active-------------------------------------------------------------------------------------------
 	eAction: 
 		IF G_Match.bActionFinie THEN //Ligne suivante
 			G_Match.PointMatch := G_Match.PointMatch + G_Match.Tableau[G_Match.iLigne].uiAjoutPoints_pts;
@@ -3936,24 +3707,24 @@ END_IF;]]></ST>
 //__________________________________________________________________________________________________________________
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	ELSIF StartAction('Dynamixel position 0') THEN
-		F_DXL_Position(0,500,ITAction.Template_XL);
+		F_DXL_Position(0,500,ITAction.MoteurXL1);
 //__________________________________________________________________________________________________________________
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////		
 	ELSIF StartAction('Dynamixel position 4095') THEN
 		CASE G_Match.iEtapeAction OF
 			0:
-				ITAction.DXLIN[ITAction.Template_XL].bPosition := TRUE;
-				ITAction.DXLIN[ITAction.Template_XL].ParamPosition_DINT := 10000;
-				ITAction.DXLIN[ITAction.Template_XL].ParamSpeed_INT := 500;
-				IF ITAction.DXLOUT[ITAction.Template_XL].bPosition THEN
-					ITAction.DXLIN[ITAction.Template_XL].bPosition := FALSE;
+				ITAction.DXLIN[ITAction.MoteurXL1].bPosition := TRUE;
+				ITAction.DXLIN[ITAction.MoteurXL1].ParamPosition_DINT := 10000;
+				ITAction.DXLIN[ITAction.MoteurXL1].ParamSpeed_INT := 500;
+				IF ITAction.DXLOUT[ITAction.MoteurXL1].bPosition THEN
+					ITAction.DXLIN[ITAction.MoteurXL1].bPosition := FALSE;
 					FinishAction(1);
 					Next();
 				END_IF
 			1:
-				ITAction.DXLIN[ITAction.Template_XL].bGetPosition := TRUE;
-				IF PlusOuMoins(ITAction.DXLOUT[ITAction.Template_XL].INFO_Position_dint, 10000, 15) THEN 
-					ITAction.DXLIN[ITAction.Template_XL].bGetPosition := FALSE;
+				ITAction.DXLIN[ITAction.MoteurXL1].bGetPosition := TRUE;
+				IF PlusOuMoins(ITAction.DXLOUT[ITAction.MoteurXL1].INFO_Position_dint, 10000, 15) THEN 
+					ITAction.DXLIN[ITAction.MoteurXL1].bGetPosition := FALSE;
 					FinishAction(0);
 				END_IF
 		END_CASE
@@ -3961,7 +3732,7 @@ END_IF;]]></ST>
 //__________________________________________________________________________________________________________________
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////		
 	ELSIF StartAction('Dynamixel reset') THEN
-		F_DXL_Reset(ITAction.XLID2,1);
+		F_DXL_Reset(ITAction.MoteurXL2,1,baseTime);
 		
 		
 //__________________________________________________________________________________________________________________
@@ -4054,32 +3825,92 @@ ________________________________________________________________________________
     </Action>
     <Action Name="_5_Interruption_active" Id="{5237f1ca-c328-4e04-be91-0752ad04c9c2}">
       <Implementation>
-        <ST><![CDATA[ITMotion.odometrie.M_reset_moteurs();]]></ST>
+        <ST><![CDATA[ITMotion.odometrie.M_reset_moteurs();
+
+//Si le robot est bloqué depuis trop longtemps, il essaye différentes actions
+IF IbAbortTask THEN
+	//Check si c'est possible de reculer en attendant
+	(*
+	G_Odometrie.lrPositionX;
+	G_Odometrie.lrPositionY;
+	G_Match.Tableau[G_Match.iLigne].lrPositionX_mm;
+	G_Match.Tableau[G_Match.iLigne].lrPositionY_mm;
+	G_Balise.lrCoord_X1;
+	G_Balise.lrCoord_Y1;
+	G_Balise.lrDistance_1;
+	*)
+
+	//Sinon calcule les points de la mission en cours
+	
+	//Vérifie les stratégie possible selon la position
+	
+	//Choisi la meilleur stratégie à adopter
+	
+	//modifie le tableau
+	
+	pass();
+END_IF
+
+(*
+Adaptation de la stratégie:
+- Calcul des points restants
+- Recherche de la prochaine stratégie
+- Adaptation potentiel du programme
+- Changement d'étape et déduction de points
+*)
+
+(*
+- Tourner 90 degré
+- move curve
+- reprise de trajectoire
+
+if coordX < 0 or coordX > 3000 or coordY > 2000 or coordY < 0 then
+*)]]></ST>
       </Implementation>
     </Action>
     <Action Name="_6_Timeout_active" Id="{d9a547ba-ecae-433a-9e89-06fa06b46c37}">
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[//S'il ne reste plus de temps pour le match, le robot entamme la manoeuvre pour rentrer à la base
+tempTableau.TypeTache := eChangementTache;
+tempTableau.EtapeCible := 'retour base';
+ReplaceStep(tempTableau);
+G_Match.RetourEnCours := TRUE;]]></ST>
       </Implementation>
     </Action>
     <Action Name="_7_EndMatch_active" Id="{fd59140a-a49d-4fe9-80c3-9a33bc765eb8}">
       <Implementation>
-        <ST><![CDATA[IF G_Match.MatchEnCours THEN
+        <ST><![CDATA[
+VisuElems.CURRENTVISU 	:= 'V_Fin_Match';
+
+//arrêt de tous les mouvements
+IF G_Match.MatchEnCours THEN
 	FOR G_EndMatch.icounter := 1 TO IiNumDynamixel DO
 		ITAction.DXLIN[G_EndMatch.icounter].bGetLoad 		:= FALSE;
 		ITAction.DXLIN[G_EndMatch.icounter].bGetMovement 	:= FALSE;
 		ITAction.DXLIN[G_EndMatch.icounter].bGetPosition 	:= FALSE;
+
+		ITAction.DXLIN[G_EndMatch.icounter].ParamReset_BOOL := TRUE;
+		ITAction.DXLIN[G_EndMatch.icounter].bStopPosition 	:= TRUE;
 	END_FOR
-	QbMoteurStop := TRUE;
+	
+	QbMoteurStop 			:= TRUE;
 	G_Match.MatchEnCours 	:= FALSE;
+	G_Match.RetourEnCours	:= FALSE;
 	baseTime := TIME();
 END_IF
 
+//attente pour être sûr que tout soit bien arrêté
 IF delay(baseTime, T#0.5S)THEN
 	QbMoteurStop 			:= FALSE;
 	QbstartBalise 			:= FALSE;
 	QbmoteurPower 			:= FALSE;
-	VisuElems.CURRENTVISU 	:= 'V_Fin_Match';
+	
+	FOR G_EndMatch.icounter := 1 TO IiNumDynamixel DO
+		IF ITAction.DXLOUT[G_EndMatch.icounter].bStopPosition THEN 
+			ITAction.DXLIN[G_EndMatch.icounter].bStopPosition := FALSE;
+		END_IF
+	END_FOR
+	
 	IF NOT IbStartMatch THEN
 			G_EndMatch.bShutdown_done := TRUE;
 	END_IF
@@ -4197,17 +4028,17 @@ IF G_Visus.bTestEnable THEN
 	IF StartAction('Dynamixel position 4095') THEN
 		CASE G_Match.iEtapeAction OF
 			0:
-				ITAction.DXLIN[ITAction.Template_XL].bPosition := TRUE;
-				ITAction.DXLIN[ITAction.Template_XL].ParamPosition_DINT := 10000;
-				ITAction.DXLIN[ITAction.Template_XL].ParamSpeed_INT := 500;
-				IF ITAction.DXLOUT[ITAction.Template_XL].bPosition THEN
-					ITAction.DXLIN[ITAction.Template_XL].bPosition := FALSE;
+				ITAction.DXLIN[ITAction.MoteurXL1].bPosition := TRUE;
+				ITAction.DXLIN[ITAction.MoteurXL1].ParamPosition_DINT := 4095;
+				ITAction.DXLIN[ITAction.MoteurXL1].ParamSpeed_INT := 500;
+				IF ITAction.DXLOUT[ITAction.MoteurXL1].bPosition THEN
+					ITAction.DXLIN[ITAction.MoteurXL1].bPosition := FALSE;
 					Next();
 				END_IF
 			1:
-				ITAction.DXLIN[ITAction.Template_XL].bGetPosition := TRUE;
-				IF PlusOuMoins(ITAction.DXLOUT[ITAction.Template_XL].INFO_Position_dint, 10000, 15) THEN 
-					ITAction.DXLIN[ITAction.Template_XL].bGetPosition := FALSE;
+				ITAction.DXLIN[ITAction.MoteurXL1].bGetPosition := TRUE;
+				IF PlusOuMoins(ITAction.DXLOUT[ITAction.MoteurXL1].INFO_Position_dint, 4095, 15) THEN 
+					ITAction.DXLIN[ITAction.MoteurXL1].bGetPosition := FALSE;
 					FinishAction(0);
 				END_IF
 		END_CASE
@@ -4216,18 +4047,17 @@ IF G_Visus.bTestEnable THEN
 	ELSIF StartAction('Dynamixel position 0') THEN
 		CASE G_Match.iEtapeAction OF
 			0:
-				ITAction.DXLIN[ITAction.Template_XL].bPosition := TRUE;
-				ITAction.DXLIN[ITAction.Template_XL].ParamPosition_DINT := 1;
-				ITAction.DXLIN[ITAction.Template_XL].ParamSpeed_INT := 1030;
-				IF ITAction.DXLOUT[ITAction.Template_XL].bPosition THEN
-					ITAction.DXLIN[ITAction.Template_XL].bPosition := FALSE;
-					FinishAction(1);
+				ITAction.DXLIN[ITAction.MoteurXL1].bPosition := TRUE;
+				ITAction.DXLIN[ITAction.MoteurXL1].ParamPosition_DINT := 1;
+				ITAction.DXLIN[ITAction.MoteurXL1].ParamSpeed_INT := 1030;
+				IF ITAction.DXLOUT[ITAction.MoteurXL1].bPosition THEN
+					ITAction.DXLIN[ITAction.MoteurXL1].bPosition := FALSE;
 					Next();;
 				END_IF
 			1:
-				ITAction.DXLIN[ITAction.Template_XL].bGetPosition := TRUE;
-				IF PlusOuMoins(ITAction.DXLOUT[ITAction.Template_XL].INFO_Position_dint, 1, 15) THEN 
-					ITAction.DXLIN[ITAction.Template_XL].bGetPosition := FALSE;
+				ITAction.DXLIN[ITAction.MoteurXL1].bGetPosition := TRUE;
+				IF PlusOuMoins(ITAction.DXLOUT[ITAction.MoteurXL1].INFO_Position_dint, 1, 15) THEN 
+					ITAction.DXLIN[ITAction.MoteurXL1].bGetPosition := FALSE;
 					FinishAction(0);
 				END_IF
 		END_CASE
@@ -4239,6 +4069,7 @@ IF G_Visus.bTestEnable THEN
 	if G_Match.bActionFinie then
 		G_Match.Tableau[G_Match.iLigne].TypeAction := '';
 		G_Match.bActionFinie := FALSE;
+		G_Match.iEtapeAction := 0;
 		
 		G_Visus.sTestBouton1 := FALSE;
 		G_Visus.sTestBouton2 := FALSE;
@@ -4252,35 +4083,44 @@ ELSE// désactivation du mode Test
 	//remise à 0 des valeurs
 	G_Match.bActionFinie := FALSE;
 	G_Match.Tableau[G_Match.iLigne].TypeAction := '';
+	G_Match.iEtapeAction := 0;
+	
 	G_Visus.sTestBouton1 := FALSE;
 	G_Visus.sTestBouton2 := FALSE;
 	G_Visus.sTestBouton3 := FALSE;
 	G_Visus.sTestBouton4 := FALSE;
 	G_Visus.sTestBouton5 := FALSE;
 	G_Visus.sTestBouton6 := FALSE;
+	
+	FOR G_Match.icounter := 1 TO IiNumDynamixel DO
+		ITAction.DXLIN[G_Match.icounter].bGetLoad 		:= FALSE;
+		ITAction.DXLIN[G_Match.icounter].bGetMovement 	:= FALSE;
+		ITAction.DXLIN[G_Match.icounter].bGetPosition 	:= FALSE;
+	END_FOR
 END_IF
 
 ]]></ST>
       </Implementation>
     </Action>
-    <Transition Name="T_finMatch" Id="{6d552d9d-9de1-4920-b9ad-cfd0f56aadd6}" FolderPath="Transition\">
+    <Transition Name="T_ArreteTout" Id="{f034e37d-5381-4e8d-80e1-1ac59c17fb3d}" FolderPath="Transition\">
+      <Implementation>
+        <ST><![CDATA[IbEndMatch or G_Match.TimeMatch >= T#100s ]]></ST>
+      </Implementation>
+    </Transition>
+    <Transition Name="T_finMatchNormal" Id="{6d552d9d-9de1-4920-b9ad-cfd0f56aadd6}" FolderPath="Transition\">
       <Implementation>
         <ST><![CDATA[G_Match.Tableau[G_Match.iLigne].TypeTache = eFinParcours;]]></ST>
       </Implementation>
     </Transition>
-    <Transition Name="T_NoTime" Id="{38a228c7-2f1c-4951-94c3-fbe3a0077b5b}" FolderPath="Transition\">
+    <Transition Name="T_RetourMatch" Id="{34370999-aba4-43de-97d4-009c3ee2ab09}" FolderPath="Transition\">
       <Implementation>
-        <ST><![CDATA[G_Match.TimeMatch >= T#100s ]]></ST>
-      </Implementation>
-    </Transition>
-    <Transition Name="T_Safe" Id="{34370999-aba4-43de-97d4-009c3ee2ab09}" FolderPath="Transition\">
-      <Implementation>
-        <ST><![CDATA[not IbPauseMotion ]]></ST>
+        <ST><![CDATA[NOT IbPauseMotion 
+]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="T_Timeout" Id="{166cb7ce-9d6c-4a26-9ad2-e6973f3a32b0}" FolderPath="Transition\">
       <Implementation>
-        <ST><![CDATA[G_Match.TimeMatch > T#94s ]]></ST>
+        <ST><![CDATA[G_Match.TimeMatch > T#20s and not G_Match.RetourEnCours]]></ST>
       </Implementation>
     </Transition>
     <ObjectProperties>
@@ -4383,12 +4223,7 @@ END_IF
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._1_Init_active">
-      <LineId Id="2" Count="8" />
-      <LineId Id="44" Count="1" />
-      <LineId Id="11" Count="32" />
-      <LineId Id="52" Count="0" />
-      <LineId Id="47" Count="4" />
-      <LineId Id="46" Count="0" />
+      <LineId Id="2" Count="50" />
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._2_PreMatch_active">
@@ -4396,47 +4231,27 @@ END_IF
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._3_Match_active">
-      <LineId Id="2" Count="25" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="105" Count="1" />
-      <LineId Id="104" Count="0" />
-      <LineId Id="107" Count="0" />
-      <LineId Id="111" Count="0" />
-      <LineId Id="109" Count="0" />
-      <LineId Id="119" Count="0" />
-      <LineId Id="108" Count="0" />
-      <LineId Id="137" Count="0" />
-      <LineId Id="28" Count="70" />
+      <LineId Id="2" Count="118" />
       <LineId Id="1" Count="0" />
-      <LineId Id="132" Count="0" />
-      <LineId Id="134" Count="2" />
-      <LineId Id="133" Count="0" />
-      <LineId Id="126" Count="5" />
-      <LineId Id="125" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._4_Action_active">
-      <LineId Id="2" Count="16" />
-      <LineId Id="35" Count="24" />
-      <LineId Id="98" Count="11" />
-      <LineId Id="186" Count="0" />
-      <LineId Id="184" Count="0" />
-      <LineId Id="110" Count="73" />
+      <LineId Id="2" Count="129" />
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._5_Interruption_active">
+      <LineId Id="2" Count="4" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="7" Count="6" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="14" Count="25" />
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._6_Timeout_active">
+      <LineId Id="2" Count="3" />
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._7_EndMatch_active">
-      <LineId Id="2" Count="6" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="21" Count="0" />
-      <LineId Id="11" Count="3" />
-      <LineId Id="17" Count="3" />
+      <LineId Id="2" Count="34" />
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._Config_Visu_active">
@@ -4444,68 +4259,22 @@ END_IF
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN._Test_Visu_active">
-      <LineId Id="166" Count="0" />
-      <LineId Id="147" Count="0" />
-      <LineId Id="149" Count="0" />
-      <LineId Id="151" Count="1" />
-      <LineId Id="150" Count="0" />
-      <LineId Id="168" Count="1" />
-      <LineId Id="167" Count="0" />
-      <LineId Id="148" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="126" Count="1" />
-      <LineId Id="130" Count="1" />
-      <LineId Id="133" Count="0" />
-      <LineId Id="132" Count="0" />
-      <LineId Id="135" Count="0" />
-      <LineId Id="134" Count="0" />
-      <LineId Id="137" Count="0" />
-      <LineId Id="136" Count="0" />
-      <LineId Id="139" Count="0" />
-      <LineId Id="138" Count="0" />
-      <LineId Id="128" Count="0" />
-      <LineId Id="140" Count="0" />
-      <LineId Id="196" Count="0" />
-      <LineId Id="170" Count="0" />
-      <LineId Id="142" Count="4" />
-      <LineId Id="141" Count="0" />
-      <LineId Id="194" Count="0" />
-      <LineId Id="192" Count="1" />
-      <LineId Id="171" Count="0" />
-      <LineId Id="102" Count="0" />
-      <LineId Id="82" Count="6" />
-      <LineId Id="90" Count="7" />
-      <LineId Id="65" Count="0" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="197" Count="0" />
-      <LineId Id="199" Count="0" />
-      <LineId Id="176" Count="15" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="200" Count="1" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="109" Count="0" />
-      <LineId Id="115" Count="0" />
+      <LineId Id="2" Count="63" />
+      <LineId Id="67" Count="16" />
       <LineId Id="111" Count="0" />
-      <LineId Id="113" Count="0" />
-      <LineId Id="129" Count="0" />
-      <LineId Id="159" Count="0" />
-      <LineId Id="153" Count="5" />
-      <LineId Id="114" Count="0" />
-      <LineId Id="34" Count="1" />
-      <LineId Id="107" Count="0" />
-      <LineId Id="36" Count="1" />
-      <LineId Id="161" Count="4" />
-      <LineId Id="160" Count="0" />
-      <LineId Id="48" Count="1" />
-      <LineId Id="51" Count="0" />
-    </LineIds>
-    <LineIds Name="Structure_MAIN.T_finMatch">
+      <LineId Id="84" Count="12" />
+      <LineId Id="112" Count="1" />
+      <LineId Id="97" Count="13" />
       <LineId Id="1" Count="0" />
     </LineIds>
-    <LineIds Name="Structure_MAIN.T_NoTime">
+    <LineIds Name="Structure_MAIN.T_ArreteTout">
       <LineId Id="1" Count="0" />
     </LineIds>
-    <LineIds Name="Structure_MAIN.T_Safe">
+    <LineIds Name="Structure_MAIN.T_finMatchNormal">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="Structure_MAIN.T_RetourMatch">
+      <LineId Id="2" Count="0" />
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="Structure_MAIN.T_Timeout">

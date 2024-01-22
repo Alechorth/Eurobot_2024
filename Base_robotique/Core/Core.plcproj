@@ -102,6 +102,12 @@
     <Compile Include="POUs\Action\ITAction.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="POUs\Communication\ITCommunication.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Communication\MQTT.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="POUs\Interruption\FB_Balise.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -150,28 +156,28 @@
     <Compile Include="POUs\Utillity\Maths\RAD2DEGRE.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="POUs\Utillity\Structure\AddStep.TcPOU">
+    <Compile Include="POUs\Utillity\Structure\Action\FinishAction.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="POUs\Utillity\Structure\EtapeEnCours.TcPOU">
+    <Compile Include="POUs\Utillity\Structure\Action\Next.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="POUs\Utillity\Structure\PointsRestants.TcPOU">
+    <Compile Include="POUs\Utillity\Structure\Action\StartAction.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="POUs\Utillity\Structure\ReplaceStep.TcPOU">
+    <Compile Include="POUs\Utillity\Structure\Tableau\AddStep.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Utillity\Structure\Tableau\EtapeEnCours.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Utillity\Structure\Tableau\PointsRestants.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Utillity\Structure\Tableau\ReplaceStep.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\Utillity\Temporisation\delay.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="POUs\Utillity\Structure\FinishAction.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="POUs\Utillity\Structure\Next.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="POUs\Utillity\Structure\StartAction.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="TASKs\BaliseTask.TcTTO">
@@ -235,7 +241,10 @@
     <Folder Include="GVLs\Raspberry PI" />
     <Folder Include="GVLs\Structure" />
     <Folder Include="GVLs\Visu" />
+    <Folder Include="POUs\Communication" />
     <Folder Include="POUs\Structure\Actions" />
+    <Folder Include="POUs\Utillity\Structure\Action" />
+    <Folder Include="POUs\Utillity\Structure\Tableau" />
     <Folder Include="TASKs" />
     <Folder Include="POUs\Action\Camera OAK-D" />
     <Folder Include="POUs\Action\Dynamixel" />
@@ -307,6 +316,9 @@
       <DefaultResolution>Tc2_MC2, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc2_MC2</Namespace>
     </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_MDP">
+      <DefaultResolution>Tc2_MDP, * (Beckhoff Automation GmbH)</DefaultResolution>
+    </PlaceholderReference>
     <PlaceholderReference Include="Tc2_Standard">
       <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc2_Standard</Namespace>
@@ -318,6 +330,10 @@
     <PlaceholderReference Include="Tc2_Utilities">
       <DefaultResolution>Tc2_Utilities, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc2_Utilities</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_IotBase">
+      <DefaultResolution>Tc3_IotBase, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_IotBase</Namespace>
     </PlaceholderReference>
     <PlaceholderReference Include="Tc3_Module">
       <DefaultResolution>Tc3_Module, * (Beckhoff Automation GmbH)</DefaultResolution>

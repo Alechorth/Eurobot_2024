@@ -8,6 +8,7 @@ VAR_GLOBAL
 	TimeMatch 			: TIME;
 	PointMatch 			: LREAL;
 	MatchEnCours		: BOOL;
+	RetourEnCours		: BOOL;
 
 	Tableau 			: ARRAY[0..100] OF ST_Tableau;
 	iLigne 				: INT;
@@ -18,7 +19,7 @@ VAR_GLOBAL
 	bDeplacementFini	: BOOL;
 	bActionFinie		: BOOL;
 	
-	iEtapeAction 		: INT := 0;
+	iEtapeAction 		: INT;
 	iAsyncAction 		: STRING; 
 END_VAR]]></Declaration>
   </GVL>

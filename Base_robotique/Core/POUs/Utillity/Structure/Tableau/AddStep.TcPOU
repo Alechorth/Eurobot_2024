@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="AddStep" Id="{a405a588-ce74-42a1-baa6-b3e398d6c40f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION AddStep : bool
+VAR_INPUT
+	step:ST_Tableau;
+END_VAR
+VAR
+	icounter:INT;
+	etapeSuivante:INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//ajoute une étape après
+etapeSuivante := G_Match.iLigne+1;
+FOR icounter := 100 TO etapeSuivante BY -1 DO
+  G_Match.Tableau[icounter] := G_Match.Tableau[icounter-1];
+END_FOR 
+G_Match.Tableau[etapeSuivante] := step;]]></ST>
+    </Implementation>
+    <LineIds Name="AddStep">
+      <LineId Id="18" Count="1" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

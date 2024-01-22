@@ -5,9 +5,12 @@
 VAR_INPUT
 	ID:INT;
 	offset:DINT;
+	
+END_VAR
+VAR_IN_OUT
+	baseTime:TIME;
 END_VAR
 VAR
-	baseTime:TIME;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -30,7 +33,7 @@ END_VAR
 		G_Visus.bMatchEnemi := TRUE;
 		ITAction.DXLIN[ID].bGetLoad := TRUE;
 		IF  G_IO.bCaptDepart OR ITAction.DXLOUT[ID].INFO_load_int >= 150 THEN
-			ITAction.DXLIN[ITAction.XLID2].bGetLoad := FALSE;
+			ITAction.DXLIN[ITAction.MoteurXL2].bGetLoad := FALSE;
 			next();
 		END_IF
 	3:
@@ -52,7 +55,9 @@ END_VAR
 END_CASE]]></ST>
     </Implementation>
     <LineIds Name="F_DXL_Reset">
-      <LineId Id="8" Count="37" />
+      <LineId Id="8" Count="22" />
+      <LineId Id="58" Count="5" />
+      <LineId Id="37" Count="8" />
       <LineId Id="7" Count="0" />
     </LineIds>
   </POU>

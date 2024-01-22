@@ -110,6 +110,15 @@ ELSE////////////////////////////////////////////////////////////////////////////
 	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
 	
 	iLigne := iLigne + 1;
+	Tableau[iLigne].NomEtape			:= 'retour base';
+	Tableau[iLigne].TypeTache			:= 	eDeplacement;	
+	Tableau[iLigne].TypeDeplacement		:=	eCoordonne;
+	Tableau[iLigne].lrPositionX_mm		:=	800;
+	Tableau[iLigne].lrPositionY_mm		:=	800;
+	Tableau[iLigne].lrVitesse_mms		:=	500;
+	Tableau[iLigne].uiAjoutPoints_pts	:= 10;
+	
+	iLigne := iLigne + 1;
 	Tableau[iLigne].TypeTache			:= 	eFinParcours;	
 END_IF
 ]]></ST>
@@ -139,6 +148,11 @@ END_IF
       <LineId Id="525" Count="0" />
       <LineId Id="527" Count="2" />
       <LineId Id="526" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="558" Count="4" />
+      <LineId Id="557" Count="0" />
       <LineId Id="380" Count="0" />
       <LineId Id="296" Count="1" />
       <LineId Id="216" Count="0" />

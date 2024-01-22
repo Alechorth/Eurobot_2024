@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MQTT" Id="{09ea7995-1288-41f6-8247-6e133f333de8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MQTT
+VAR_INPUT
+	IsHostIP 	: STRING;					//Adresse IP du broker Mosquitto qui tourne sur la partie windows de la PLC
+	IbConnect 	: BOOL;						//Commence la connection MQTT
+	
+	IsTopicOut 	: STRING;					//Nom du Topic où la PLC publie des chose
+	IsTopicIn 	: STRING;					//Nom du Topic où la PLC est souscrite (lis les informations)
+	IbPublishStart : BOOL;					//Un front montant publie le message IsPayload dans le topic IsTopicOut
+	IsPayload : STRING;						//Message à publier dans le topic
+	
+END_VAR
+VAR_OUTPUT
+	QbOnline : BOOL;						//Communication MQTT en ligne
+END_VAR
+VAR_IN_OUT
+	QiAddPoint : INT;						//Donne l'ordre d'ajouter des points	
+END_VAR
+VAR
+fbMqttClient 	: FB_IotMqttClient;			//FB de gestion de la communication MQTT
+fbMessageQueue 	: FB_IotMqttMessageQueue;	//Zone tampon de stockage des messages reçus
+fbMessage 		: FB_IotMqttMessage;		//Formattage des message MQTT reçu
+
+RT_Publish 		: R_TRIG;					//Front montant pour la publication
+
+bSubscribed : BOOL;							//Souscription au topic effectué
+
+{attribute 'TcEncoding':='UTF-8'}
+sPayloadRcv 	: STRING(255);				//Contenu du message souscrit (valeur reçue)
+iNumPamiDone	: INT;						//Numéro du PAMI qui à fini son action
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF _TaskInfo[GETCURTASKINDEXEX()].FirstCycle THEN	//Lancement de la recherche de broker
+	fbMqttClient.sHostName 		:= IsHostIP;		//Adresse IP d'ou se situe le broker (donc sur un Raspberry dans Node-red)
+	fbMqttClient.nHostPort 		:= 1883;			//Port de communication du broker
+	fbMqttClient.sClientId 		:= 'Bobst PLC';
+	fbMqttClient.sTopicPrefix 	:= '';
+	fbMqttClient.nKeepAlive 	:= 10;
+	fbMqttClient.ipMessageQueue := fbMessageQueue;	//Sert à stocker les messages souscrit avant de les traiter
+END_IF
+
+//Lancement de la connexion MQTT
+fbMqttClient.Execute(IbConnect);	
+QbOnline := fbMqttClient.bConnected AND bSubscribed;
+
+//Si on est connecté au broker alors...
+IF fbMqttClient.bConnected THEN	
+
+	//*** Souscrire à un topic ***//
+	IF NOT bSubscribed THEN		//Signal pour lancer la souscription à un message
+		bSubscribed := fbMqttClient.Subscribe(sTopic:=IsTopicIn,  eQoS:=TcIotMqttQos.AtMostOnceDelivery);
+	END_IF
+	
+	//*** Publier un message ***//
+	RT_Publish(clk:=IbPublishStart);
+	IF  RT_Publish.Q THEN //Lorsque ce signal est à 1, on publie un message
+		fbMqttClient.Publish( sTopic  		:= IsTopicOut,	//On écrit le nom du Topic d'un message à envoyer
+							  pPayload		:= ADR(IsPayload),	//On écrit le contenu du message à envoyer (valeur à envoyer)
+							  nPayloadSize	:= SIZEOF(IsPayload),	//On indique la taille du STRING donc le nombre de caractère.
+							  eQoS			:= TcIotMqttQos.AtMostOnceDelivery,	//Qualité de service, à laisser comme cela
+							  bRetain		:= FALSE,	//à laisser comme cela
+							  bQueue		:= FALSE );	//à laisser comme cela
+	END_IF			
+END_IF
+
+//*** Récupérer les messages des topics auquels on est souscris ***//
+IF (fbMessageQueue.nQueuedMessages > 0) THEN 
+	IF fbMessageQueue.Dequeue(fbMessage:=fbMessage) THEN
+		IF fbMessage.CompareTopic(sTopic:=IsTopicIn) THEN
+			fbMessage.GetPayload(pPayload:=ADR(sPayloadRcv), nPayloadSize:=SIZEOF(sPayloadRcv), bSetNullTermination:=FALSE);	//Valeur du message 1 reçu
+		END_IF
+		iNumPamiDone := STRING_TO_INT(RIGHT(sPayloadRcv,1));		
+	END_IF
+END_IF
+
+//Choisi le nombre de points à ajouter en fonction du message MQTT reçu
+CASE iNumPamiDone OF
+	0:
+		pass();
+	1:
+		QiAddPoint := 10;
+		iNumPamiDone := 0;
+	2:
+		QiAddPoint := 10;
+		iNumPamiDone := 0;
+	3:
+		QiAddPoint := 10;
+		iNumPamiDone := 0;
+	4:		
+		QiAddPoint := 10;
+		iNumPamiDone := 0;
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="MQTT">
+      <LineId Id="256" Count="0" />
+      <LineId Id="258" Count="4" />
+      <LineId Id="267" Count="1" />
+      <LineId Id="459" Count="0" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="399" Count="1" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="401" Count="1" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="285" Count="2" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="289" Count="1" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="323" Count="1" />
+      <LineId Id="311" Count="3" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="525" Count="2" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="528" Count="1" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="530" Count="1" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="524" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

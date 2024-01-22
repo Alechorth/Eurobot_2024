@@ -220,6 +220,7 @@ VAR_INST
 	lrVecteurDepart		:ARRAY [0..1] OF LREAL; //vecteur entre l'axe de rotation et le point de départ du robot
 	lrVecteurPosition	:ARRAY [0..1] OF LREAL; //vecteur entre l'axe de rotation et la position actuelle du robot
 	lrVecteurTrajectoire:ARRAY [0..1] OF LREAL; //vecteur de la positon théorique du robot en fonction de l'ange auxquel il se trouve
+	
 	lrProduitVecteur	:LREAL;
 	lrSommeNormeVecteur	:LREAL;
 	lrDifferencePosition:LREAL;
@@ -231,7 +232,10 @@ VAR_INST
 	bBackward 			:BOOL;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[r_trig(CLK := bExecute);
+        <ST><![CDATA[//Prototype, à tester avant d'utiliser
+
+
+r_trig(CLK := bExecute);
 bdone := FALSE;
 CASE step OF 
 	0:
@@ -247,6 +251,7 @@ CASE step OF
 		END_IF
 	1:
 		IF NOT G_Moteurs.mcRelativeD.Execute AND NOT G_Moteurs.mcRelativeG.Execute THEN
+			//En Avant
 			IF lrAngle > 0 THEN
 				bBackward := FALSE;
 				IF lrRayon > 0 THEN 	//rotation vers la droite
@@ -276,7 +281,7 @@ CASE step OF
 					G_Moteurs.mcRelativeD.Velocity := lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
 					G_Moteurs.mcRelativeG.velocity := (G_Moteurs.mcRelativeG.Distance/G_Moteurs.mcRelativeD.Distance) * lrspeed;	//si coodronnées attribuées aux moteurs, exécution du mouvement prévu
 				END_IF	
-				
+			//En Arrière	
 			ELSIF lrAngle < 0 THEN
 				bBackward := TRUE;
 				lrAngle := ABS(lrAngle);
@@ -615,6 +620,7 @@ G_Moteurs.mcRelativeG.Deceleration	:= lrDecc;]]></ST>
       <LineId Id="15" Count="1" />
     </LineIds>
     <LineIds Name="FB_Motion_Odometrie.M_move_curve">
+      <LineId Id="734" Count="2" />
       <LineId Id="122" Count="0" />
       <LineId Id="220" Count="0" />
       <LineId Id="26" Count="0" />
@@ -627,6 +633,7 @@ G_Moteurs.mcRelativeG.Deceleration	:= lrDecc;]]></ST>
       <LineId Id="148" Count="0" />
       <LineId Id="203" Count="0" />
       <LineId Id="602" Count="0" />
+      <LineId Id="732" Count="0" />
       <LineId Id="273" Count="0" />
       <LineId Id="404" Count="0" />
       <LineId Id="276" Count="1" />
